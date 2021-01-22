@@ -9,17 +9,24 @@
 	            class="easyui-datagrid" 
 	            rowNumbers="true" 
 	            pagination="true" 
-	            url="<?= base_url('admin/getBarangMasuk') ?>" 
+	            url="<?= base_url('admin/getPenjualan') ?>" 
 	            pageSize="50" 
 	            pageList="[10,20,50,75,100,125,150,200]" 
 	            nowrap="true" 
 	            singleSelect="true">
 	              <thead>
 	                  <tr>
-	                      <th field="kode_faktur" width="15%">Kode Faktur</th>
-	                      <th field="nama_barang" width="35%">Nama Barang</th>
-	                      <th field="jumlah"  width="15%">Jumlah Masuk</th>
-	                      <th field="tgl_masuk" width="10%">Tanggal Masuk Barang</th>
+	                      <th field="no_faktur" width="5%">No KWT</th>
+	                      <th field="nama_pembeli" width="10%">Nama Konsumen</th>
+	                      <th field="alamat"  width="20%">Alamat Kosumen</th>
+	                      <th field="no_telp"  width="10%">Telp Kosumen</th>
+	                      <th field="tgl_transaksi" width="10%">Tanggal Penjualan</th>
+	                      <th field="nama_barang" width="15%">Nama Barang</th>
+	                      <th field="nama" width="10%">Sales</th>
+	                      <th field="status_bayar" data-options="formatter:formatStatusBayar" width="5%">Status Pembayaran</th>
+	                      <th field="status_penjualan" data-options="formatter:formatStatusBeli" width="5%">Metode Bayar</th>
+	                      <th field="total" data-options="formatter:formatRupiah" width="10%">Jumlah</th>
+	                      <th field="last_update" data-options="formatter:formatTerakhirBayar" width="10%">Terakhir Bayar</th>
 	                  </tr>
 	              </thead>
 	          </table>
@@ -152,9 +159,29 @@ function destroy(){
     }
 }
 function formatRupiah(index, row){
-	return accounting.formatMoney(row.harga_barang, "Rp ", 0, ".", ",");
+	return accounting.formatMoney(row.total, "Rp ", 0, ".", ",");
 }
-function formatTotal(index,row){
-    return accounting.formatMoney((row.harga_barang*row.stok), "Rp ", 0, ".", ",");
+function formatStatusBayar(i,r){
+    if(r.status_bayar==0){
+        return 'Belum Bayar';
+    }else if(r.status_bayar==1){
+        return 'Sudah Bayar';
+    }else{
+        return 'lunas';
+    }
+}
+function formatStatusBeli(i,r){
+    if(r.status_bayar==0){
+        return 'Kredit';
+    }else{
+        return 'Tunai';
+    }
+}
+function formatTerakhirBayar(i,r){
+    let t = r.last_update.split(/[- :]/);
+    // Apply each element to the Date function
+    let d = new Date(Date.UTC(t[0], t[1]-1, t[2], t[3]));
+    console.log('d :>> ', d);
+    return d;
 }
 </script>

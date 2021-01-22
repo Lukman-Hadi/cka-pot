@@ -308,9 +308,42 @@ class Admin extends CI_Controller {
         $data['js_files'][] = base_url() . 'assets/admin/easyui/plugins/datagrid-scrollview.js';
         $data['js_files'][] = base_url() . 'assets/admin/plugins/accounting/accounting.min.js';
         $this->template->load('template','master/barangMasuk',$data);
-	}
+    }
+    function isBarang(){
+        $barang = $this->backend_model->isBarang();
+        $this->output->set_content_type('application/json');
+        echo json_encode($barang->result());
+    }
 	function saveBarangMasuk(){
-
+        $kode = $this->input->post('kode_faktur', TRUE);
+		$id = $this->input->post('kode_barang', TRUE);
+		$jumlah = $this->input->post('jumlah', TRUE);
+		$tgl = $this->input->post('tgl', TRUE);
+        $data=array();
+        $data = array(
+                'kode_faktur'         => $kode,
+                'id_barang'         => $id,
+                'jumlah'         => $jumlah,
+                'tgl_masuk'         => $tgl,
+        );
+        $oldData = $this->backend_model->getBarangById($id)->row()->stok;
+        $dataUpdate = array();
+        $stokBaru = $oldData+$jumlah;
+        $dataUpdate = array(
+            'stok' => $stokBaru,
+        );
+        $result = $this->global_model->insert('tbl_barang_masuk',$data);
+        if ($result){
+            $where = array('_id'=>$id);
+            $update = $this->global_model->update('tbl_barang',$dataUpdate, $where);
+            if($update){
+                echo json_encode(array('message'=>'Save Success'));
+            }else{
+                echo json_encode(array('errorMsg'=>'Gagal Update'));
+            }
+        } else {
+            echo json_encode(array('errorMsg'=>'Some errors occured.'));
+        }
 	}
 	function getBarangMasuk(){
 		$this->output->set_content_type('application/json');
@@ -321,6 +354,46 @@ class Admin extends CI_Controller {
 
 	}
 	function destroyBarangMasuk(){
+        $id = $this->input->post('id');
+        $result = $this->global_model->delete('tbl_barang_masuk',array('_id'=>$id));
+        if ($result){
+            echo json_encode(array('message'=>'Deleted Success'));
+        } else {
+            echo json_encode(array('errorMsg'=>'Some errors occured.'));
+        }
+    }
+    //end barang masuk//
+    //end Modul Gudang//
 
-	}
+    //Modul Transaksi//
+    // penjualan //
+    function penjualan(){
+        $data['title']  = 'Data Penjualan Cka';
+        $data['collapsed'] = '';
+        $data['css_files'][] = base_url() . 'assets/admin/easyui/themes/material/easyui.css';
+        $data['css_files'][] = base_url() . 'assets/admin/easyui/themes/icon.css';
+        $data['js_files'][] = base_url() . 'assets/admin/easyui/jquery.easyui.min.js';
+        $data['js_files'][] = base_url() . 'assets/admin/easyui/datagrid-groupview.js';
+        $data['js_files'][] = base_url() . 'assets/admin/easyui/plugins/datagrid-scrollview.js';
+        $data['js_files'][] = base_url() . 'assets/admin/easyui/plugins/datagrid-scrollview.js';
+        $data['js_files'][] = base_url() . 'assets/admin/plugins/accounting/accounting.min.js';
+        $this->template->load('template','master/penjualan',$data);
+    }
+    function getPenjualan(){
+        $this->output->set_content_type('application/json');
+		$barang = $this->backend_model->getPenjualan();
+		echo json_encode($barang);
+    }
+    function getDetilPenjualan(){
+
+    }
+    function updatePenjualan(){
+
+    }
+    function editPenjualan(){
+
+    }
+    function savePenjualan(){
+
+    }
 }

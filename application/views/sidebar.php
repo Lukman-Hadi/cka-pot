@@ -83,7 +83,7 @@
 					</a>
 					<ul class="nav nav-treeview">
 						<li class="nav-item">
-							<a href="#" class="nav-link">
+							<a href="<?=base_url()?>admin/penjualan" class="nav-link">
 								<i class="fa fa-file-invoice-dollar fa-xs nav-icon"></i>
 								<p>Penjualan</p>
 							</a>

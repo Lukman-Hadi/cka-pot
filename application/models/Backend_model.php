@@ -108,6 +108,17 @@ class Backend_model extends CI_Model
         return $result;
     }
 
+    function isBarang(){
+        return $this->db->get('tbl_barang');
+    }
+
+    function getBarangById($id){
+        $this->db->select('*');
+        $this->db->from('tbl_barang');
+        $this->db->where('_id',$id);
+        return $this->db->get();
+    }
+
     function getBarangMasuk(){
         $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
         $rows = isset($_POST['rows']) ? intval($_POST['rows']) : 20;
@@ -125,7 +136,7 @@ class Backend_model extends CI_Model
             $this->db->like('tbl_barang.nama_barang',$search,'both');
             $this->db->group_end();
         }
-        $result['total'] = $this->db->get('')->num_rows();
+        $result['total'] = $this->db->get()->num_rows();
 
         $this->db->select('tbl_barang_masuk.*,tbl_barang.nama_barang');
         $this->db->from('tbl_barang_masuk');
@@ -137,6 +148,81 @@ class Backend_model extends CI_Model
         }
         $this->db->order_by($sort,$order);
         $this->db->limit($rows,$offset);
+        $query=$this->db->get();    
+
+        $item = $query->result_array();    
+        $result = array_merge($result, ['rows' => $item]);
+        return $result;
+    }
+
+    function getPenjualan(){
+        $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
+        $rows = isset($_POST['rows']) ? intval($_POST['rows']) : 20;
+        $sort = isset($_POST['sort']) ? strval($_POST['sort']) : 'p._id';
+        $order = isset($_POST['order']) ? strval($_POST['order']) : 'ASC';
+        $search = isset($_POST['search_data']) ? strval($_POST['search_data']) : '';
+        $offset = ($page-1)*$rows;
+        $result = array();
+
+        $this->db->select('p.*,u.nama, b.nama_barang');
+        $this->db->from('tbl_penjualan p');
+        $this->db->join('tbl_user u','u.nik = p.nik');
+        $this->db->join('tbl_barang b','b._id = p.kode_barang');
+        if(isset($_POST['search_data'])) {
+            $this->db->group_start();
+            $this->db->like('tbl_barang.nama_barang',$search,'both');
+            $this->db->group_end();
+        }
+        $result['total'] = $this->db->get('')->num_rows();
+        $this->db->select('p.*,u.nama, b.nama_barang');
+        $this->db->from('tbl_penjualan p');
+        $this->db->join('tbl_user u','u.nik = p.nik');
+        $this->db->join('tbl_barang b','b._id = p.kode_barang');
+        if(isset($_POST['search_data'])) {
+            $this->db->group_start();
+            $this->db->like('tbl_barang.nama_barang',$search,'both');
+            $this->db->group_end();
+        }
+        $this->db->order_by($sort,$order);
+        $this->db->limit($rows,$offset);
+        $query=$this->db->get();    
+
+        $item = $query->result_array();    
+        $result = array_merge($result, ['rows' => $item]);
+        return $result;
+
+    }
+    function getPenjualanById($id){
+        $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
+        $rows = isset($_POST['rows']) ? intval($_POST['rows']) : 20;
+        $sort = isset($_POST['sort']) ? strval($_POST['sort']) : 'p._id';
+        $order = isset($_POST['order']) ? strval($_POST['order']) : 'ASC';
+        $search = isset($_POST['search_data']) ? strval($_POST['search_data']) : '';
+        $offset = ($page-1)*$rows;
+        $result = array();
+        $this->db->select('p.*,u.nama, b.nama_barang');
+        $this->db->from('tbl_penjualan p');
+        $this->db->join('tbl_user u','u.nik = p.nik');
+        $this->db->join('tbl_barang b','b._id = p.kode_barang');
+        if(isset($_POST['search_data'])) {
+            $this->db->group_start();
+            $this->db->like('tbl_barang.nama_barang',$search,'both');
+            $this->db->group_end();
+        }
+        $this->db->where('p.nik',$id);
+        $result['total'] = $this->db->get('')->num_rows();
+        $this->db->select('p.*,u.nama, b.nama_barang');
+        $this->db->from('tbl_penjualan p');
+        $this->db->join('tbl_user u','u.nik = p.nik');
+        $this->db->join('tbl_barang b','b._id = p.kode_barang');
+        if(isset($_POST['search_data'])) {
+            $this->db->group_start();
+            $this->db->like('tbl_barang.nama_barang',$search,'both');
+            $this->db->group_end();
+        }
+        $this->db->order_by($sort,$order);
+        $this->db->limit($rows,$offset);
+        $this->db->where('p.nik',$id);
         $query=$this->db->get();    
 
         $item = $query->result_array();    
