@@ -89,7 +89,7 @@
 							</a>
 						</li>
 						<li class="nav-item">
-							<a href="pages/layout/top-nav-sidebar.html" class="nav-link">
+							<a href="<?=base_url()?>admin/penagihan" class="nav-link">
 								<i class="fas fa-receipt nav-icon"></i>
 								<p>Penagihan</p>
 							</a>

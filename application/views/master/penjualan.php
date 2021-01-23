@@ -23,10 +23,11 @@
 	                      <th field="tgl_transaksi" width="10%">Tanggal Penjualan</th>
 	                      <th field="nama_barang" width="15%">Nama Barang</th>
 	                      <th field="nama" width="10%">Sales</th>
-	                      <th field="status_bayar" data-options="formatter:formatStatusBayar" width="5%">Status Pembayaran</th>
 	                      <th field="status_penjualan" data-options="formatter:formatStatusBeli" width="5%">Metode Bayar</th>
+	                      <th field="tgl_tempo" width="5%">Jatuh Tempo</th>
 	                      <th field="total" data-options="formatter:formatRupiah" width="10%">Jumlah</th>
 	                      <th field="last_update" data-options="formatter:formatTerakhirBayar" width="10%">Terakhir Bayar</th>
+	                      <th field="status_approve" data-options="formatter:formatApprove" width="10%">Approval</th>
 	                  </tr>
 	              </thead>
 	          </table>
@@ -36,6 +37,9 @@
 	                  <div class="col-sm-6">
 	                  	<a href="javascript:void(0);" class="easyui-linkbutton" iconCls="icon-add" plain="false" onclick="newForm()">Add</a>
 	                  	<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="false" onclick="destroy()">Delete</a>
+	                  	<a href="javascript:void(0)" class="easyui-linkbutton" plain="false" onclick="edit(">Edit</a>
+	                  	<a href="javascript:void(0)" class="easyui-linkbutton" plain="false" onclick="detail()">Detail</a>
+	                  	<a href="javascript:void(0)" class="easyui-linkbutton" plain="false" onclick="catatan()">Tambah Catatan</a>
 	                  </div>
 	                  
 	                  <div class="col-sm-6 pull-right">
@@ -54,16 +58,28 @@
 	      }" style="width:100%;max-width:500px;padding:30px 60px;">
 	      	<form id="ff" class="easyui-form" method="post" data-options="novalidate:false" enctype="multipart/form-data">
 	      		<div style="margin-bottom:20px">
-					<input class="easyui-textbox" name="kode_faktur" style="width:100%" data-options="label:'Kode Faktur:',required:true">
+					<input class="easyui-textbox" name="kode_faktur" style="width:100%" data-options="label:'No Faktur:',required:true">
 				</div>
 	      		<div style="margin-bottom:20px">
-					<input id="iskodebarang" class="easyui-textbox" name="kode_barang" style="width:100%" data-options="label:'Kode Barang:',required:true, editable:false">
+					<input class="easyui-textbox" name="nama_pembeli" style="width:100%" data-options="label:'Nama:',required:true">
 				</div>
 				<div style="margin-bottom:20px">
-					<input type="number" class="easyui-textbox" name="jumlah" style="width:100%" data-options="label:'Jumlah:',required:true">
+					<textarea class="easyui-textbox" name="alamat_pembeli" style="width:100%" data-options="label:'Alamat :',required:true,multiline:true,height:100"></textarea>
 				</div>
 				<div style="margin-bottom:20px">
-					<input type="date" class="easyui-textbox" name="tgl" style="width:100%" data-options="label:'Tanggal:',required:true">
+					<input type="number" class="easyui-textbox" name="no_tlfn" style="width:100%" data-options="label:'No Tlfn:',required:true">
+				</div>
+				<div style="margin-bottom:20px">
+					<input id="barang" class="easyui-textbox" name="id_barang" style="width:100%" data-options="label:'Produk :',required:true">
+				</div>
+				<div style="margin-bottom:20px">
+					<input id="metode" class="easyui-textbox" name="status_penjualan" style="width:100%" data-options="label:'Termin :',required:true">
+				</div>
+				<div style="margin-bottom:20px">
+					<input id="tempo" type="number" value="0" class="easyui-textbox" name="tgl_tempo" style="width:100%" data-options="label:'Jatuh Tempo:',readonly:false, initValue:0, setText:'0'">
+				</div>
+				<div style="margin-bottom:20px">
+					<input type="date" class="easyui-textbox" name="tgl_jual" style="width:100%" data-options="label:'Tanggal Jual:', required: true">
 				</div>
 				</form>
 				<div id="dialog-buttons">
@@ -84,12 +100,27 @@ $(document).ready(function(){
         $('#btn_serach').click();
         }
     });
-	$('#iskodebarang').combobox({
+	$('#barang').combobox({
   	    url:'isbarang',
   	    valueField:'_id',
   	    textField:'nama_barang',
         setText:'nama_barang',
-  	});
+	  });
+	$('#metode').combobox({
+	textField: 'metode',
+	valueField: 'value',
+	data: [
+		{ 'metode': 'Tunai', "value": 0 },
+		{ 'metode': 'Kredit 7 Bulan', "value": 7 },
+		{ 'metode': 'Kredit 10 Bulan', "value": 10 },
+	],
+	onChange: function(e){
+		if(e==0){
+			$('#tempo').textbox('reset');
+			$('#tempo').textbox('readonly',true);
+		}
+	}
+});
 })
 function doSearch(){
 	$('#dgGrid').datagrid('load',{
@@ -104,6 +135,7 @@ function submitForm(){
 			return $(this).form('validate');
 		},
 		success: function(result){
+			console.log('result', result)
 			var result = eval('('+result+')');
 			if (result.errorMsg){
 				Toast.fire({
@@ -124,7 +156,7 @@ function submitForm(){
 function newForm(){
 	$('#dialog-form').dialog('open').dialog('setTitle','Add New Goods');
 	$('#ff').form('clear');
-	url = 'saveBarangMasuk';
+	url = 'savePenjualan';
 }
 function editForm(){
 	var row = $('#dgGrid').datagrid('getSelected');
@@ -132,7 +164,13 @@ function editForm(){
 			$('#dialog-form').dialog('open').dialog('setTitle','Edit Barang' + row.nama_barang);
             $('#ff').form('load',row);
             $('#harga').textbox('setValue',row.harga_barang)
-			url = 'updateBarang?id='+row._id;
+			url = 'updatePenjualan?id='+row._id;
+		}
+}
+function detail(){
+	var row = $('#dgGrid').datagrid('getSelected');
+		if (row){
+			window.location.replace("getdetailpenjualan/"+row._id);
 		}
 }
 function destroy(){
@@ -140,7 +178,7 @@ function destroy(){
     if (row){
         $.messager.confirm('Confirm','Are you sure you want to destroy this Goods ? '+ row.nama_barang,function(r){
             if (r){
-                $.post('destroyBarangMasuk',{id:row._id},function(result){
+                $.post('destroyPenjualan',{id:row._id},function(result){
                     if (result.errorMsg){
                         Toast.fire({
 			              type: 'error',
@@ -161,27 +199,32 @@ function destroy(){
 function formatRupiah(index, row){
 	return accounting.formatMoney(row.total, "Rp ", 0, ".", ",");
 }
-function formatStatusBayar(i,r){
-    if(r.status_bayar==0){
-        return 'Belum Bayar';
-    }else if(r.status_bayar==1){
-        return 'Sudah Bayar';
-    }else{
-        return 'lunas';
-    }
-}
 function formatStatusBeli(i,r){
-    if(r.status_bayar==0){
-        return 'Kredit';
-    }else{
+    if(r.status_penjualan==0){
         return 'Tunai';
+    }else{
+        return 'Kredit';
     }
 }
 function formatTerakhirBayar(i,r){
-    let t = r.last_update.split(/[- :]/);
-    // Apply each element to the Date function
-    let d = new Date(Date.UTC(t[0], t[1]-1, t[2], t[3]));
-    console.log('d :>> ', d);
-    return d;
+	let t = r.last_update.split(/[- :]/);
+	console.log('r',t)
+    // // Apply each element to the Date function
+	// let d = new Date(r.last_update).toDateString();
+	// return d;
+	let bulanIndo = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September' , 'Oktober', 'November', 'Desember'];
+    let tanggal = t[2];
+    let bulan = t[1];
+	let tahun = t[0];
+	console.log('tanggal', tanggal)
+ 
+    return tanggal + " " + bulanIndo[Math.abs(bulan)] + " " + tahun;
+}
+function formatApprove(i,r){
+	if(r.status_approve){
+		return 'Belum Approve'
+	}else{
+		return 'Sudah Approve'
+	}
 }
 </script>

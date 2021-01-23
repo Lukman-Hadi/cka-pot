@@ -9,17 +9,21 @@
 	            class="easyui-datagrid" 
 	            rowNumbers="true" 
 	            pagination="true" 
-	            url="<?= base_url('admin/getBarangMasuk') ?>" 
+	            url="<?= base_url('admin/getPenagihan') ?>" 
 	            pageSize="50" 
 	            pageList="[10,20,50,75,100,125,150,200]" 
-	            nowrap="true" 
+	            nowrap="false" 
 	            singleSelect="true">
 	              <thead>
 	                  <tr>
-	                      <th field="kode_faktur" width="15%">Kode Faktur</th>
-	                      <th field="nama_barang" width="35%">Nama Barang</th>
-	                      <th field="jumlah"  width="15%">Jumlah Masuk</th>
-	                      <th field="tgl_masuk" width="10%">Tanggal Masuk Barang</th>
+	                      <th field="kode_bayar" width="10%">No Faktur</th>
+	                      <th field="kode_faktur" width="10%">No Faktur Penjualan</th>
+	                      <th field="nama_pembeli"  width="20%">Nama Konsumen</th>
+	                      <th field="alamat"  width="10%">Alamat Konsumen</th>
+	                      <th field="tgl_bayar" width="10%">Tanggal Penagihan</th>
+	                      <th field="nama" width="15%">Collector</th>
+	                      <th field="tgl_tempo" width="10%">Tanggal Jatuh Tempo</th>
+	                      <th field="status" data-options="formatter:formatApprove" width="10%">Approval</th>
 	                  </tr>
 	              </thead>
 	          </table>
@@ -29,6 +33,9 @@
 	                  <div class="col-sm-6">
 	                  	<a href="javascript:void(0);" class="easyui-linkbutton" iconCls="icon-add" plain="false" onclick="newForm()">Add</a>
 	                  	<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="false" onclick="destroy()">Delete</a>
+	                  	<a href="javascript:void(0)" class="easyui-linkbutton" plain="false" onclick="edit()">Edit</a>
+	                  	<a href="javascript:void(0)" class="easyui-linkbutton" plain="false" onclick="detail()">Detail</a>
+	                  	<a href="javascript:void(0)" class="easyui-linkbutton" plain="false" onclick="catatan()">Tambah Catatan</a>
 	                  </div>
 	                  
 	                  <div class="col-sm-6 pull-right">
@@ -47,16 +54,13 @@
 	      }" style="width:100%;max-width:500px;padding:30px 60px;">
 	      	<form id="ff" class="easyui-form" method="post" data-options="novalidate:false" enctype="multipart/form-data">
 	      		<div style="margin-bottom:20px">
-					<input class="easyui-textbox" name="kode_faktur" style="width:100%" data-options="label:'Kode Faktur:',required:true">
+					<input id="kode" class="easyui-textbox" name="kode_faktur" style="width:100%" data-options="label:'No Faktur:',required:true">
 				</div>
 	      		<div style="margin-bottom:20px">
-					<input id="iskodebarang" class="easyui-textbox" name="kode_barang" style="width:100%" data-options="label:'Nama Barang:',required:true, editable:false">
+					<input class="easyui-numberbox" name="total_barang" style="width:100%" data-options="label:'Harga Barang:',required:true,groupSeparator:'.',prefix:'Rp '">
 				</div>
 				<div style="margin-bottom:20px">
-					<input type="number" class="easyui-textbox" name="jumlah" style="width:100%" data-options="label:'Jumlah:',required:true">
-				</div>
-				<div style="margin-bottom:20px">
-					<input type="date" class="easyui-textbox" name="tgl" style="width:100%" data-options="label:'Tanggal:',required:true">
+					<input type="date" class="easyui-textbox" name="tgl_bayar" style="width:100%" data-options="label:'Tanggal :',required:true,">
 				</div>
 				</form>
 				<div id="dialog-buttons">
@@ -77,12 +81,12 @@ $(document).ready(function(){
         $('#btn_serach').click();
         }
     });
-	$('#iskodebarang').combobox({
-  	    url:'isbarang',
-  	    valueField:'_id',
-  	    textField:'nama_barang',
-        setText:'nama_barang',
-  	});
+	$('#kode').combobox({
+  	    url:'isKodePenjualan',
+  	    valueField:'no_faktur',
+  	    textField:'no_faktur',
+        setText:'no_faktur',
+	  });
 })
 function doSearch(){
 	$('#dgGrid').datagrid('load',{
@@ -97,6 +101,7 @@ function submitForm(){
 			return $(this).form('validate');
 		},
 		success: function(result){
+			console.log('result', result)
 			var result = eval('('+result+')');
 			if (result.errorMsg){
 				Toast.fire({
@@ -117,7 +122,7 @@ function submitForm(){
 function newForm(){
 	$('#dialog-form').dialog('open').dialog('setTitle','Add New Goods');
 	$('#ff').form('clear');
-	url = 'saveBarangMasuk';
+	url = 'savePenjualan';
 }
 function editForm(){
 	var row = $('#dgGrid').datagrid('getSelected');
@@ -125,7 +130,13 @@ function editForm(){
 			$('#dialog-form').dialog('open').dialog('setTitle','Edit Barang' + row.nama_barang);
             $('#ff').form('load',row);
             $('#harga').textbox('setValue',row.harga_barang)
-			url = 'updateBarang?id='+row._id;
+			url = 'updatePenjualan?id='+row._id;
+		}
+}
+function detail(){
+	var row = $('#dgGrid').datagrid('getSelected');
+		if (row){
+			window.location.replace("getdetailpenjualan/"+row._id);
 		}
 }
 function destroy(){
@@ -133,7 +144,7 @@ function destroy(){
     if (row){
         $.messager.confirm('Confirm','Are you sure you want to destroy this Goods ? '+ row.nama_barang,function(r){
             if (r){
-                $.post('destroyBarangMasuk',{id:row._id},function(result){
+                $.post('destroyPenjualan',{id:row._id},function(result){
                     if (result.errorMsg){
                         Toast.fire({
 			              type: 'error',
@@ -152,9 +163,34 @@ function destroy(){
     }
 }
 function formatRupiah(index, row){
-	return accounting.formatMoney(row.harga_barang, "Rp ", 0, ".", ",");
+	return accounting.formatMoney(row.total, "Rp ", 0, ".", ",");
 }
-function formatTotal(index,row){
-    return accounting.formatMoney((row.harga_barang*row.stok), "Rp ", 0, ".", ",");
+function formatStatusBeli(i,r){
+    if(r.status_penjualan==0){
+        return 'Tunai';
+    }else{
+        return 'Kredit';
+    }
+}
+function formatTerakhirBayar(i,r){
+	let t = r.last_update.split(/[- :]/);
+	console.log('r',t)
+    // // Apply each element to the Date function
+	// let d = new Date(r.last_update).toDateString();
+	// return d;
+	let bulanIndo = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September' , 'Oktober', 'November', 'Desember'];
+    let tanggal = t[2];
+    let bulan = t[1];
+	let tahun = t[0];
+	console.log('tanggal', tanggal)
+ 
+    return tanggal + " " + bulanIndo[Math.abs(bulan)] + " " + tahun;
+}
+function formatApprove(i,r){
+	if(r.status){
+		return 'Belum Approve'
+	}else{
+		return 'Sudah Approve'
+	}
 }
 </script>
