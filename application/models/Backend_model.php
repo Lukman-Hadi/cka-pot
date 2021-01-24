@@ -172,25 +172,29 @@ class Backend_model extends CI_Model
 
         $this->db->select('p.*,u.nama, b.nama_barang');
         $this->db->from('tbl_penjualan p');
-        $this->db->join('tbl_user u','u.nik = p.nik');
-        $this->db->join('tbl_barang b','b._id = p.kode_barang');
+        $this->db->join('tbl_user u','u._id = p.id_user');
+        $this->db->join('tbl_barang b','b._id = p.id_barang');
         if(isset($_POST['search_data'])) {
             $this->db->group_start();
             $this->db->like('p.nama_pembeli',$search,'both');
             $this->db->or_like('p.alamat',$search,'both');
             $this->db->or_like('u.nama',$search,'both');
+            $this->db->or_like('p.tgl_tempo',$search,'both');
+            $this->db->or_like('p.no_faktur',$search,'both');
             $this->db->group_end();
         }
         $result['total'] = $this->db->get('')->num_rows();
         $this->db->select('p.*,u.nama, b.nama_barang');
         $this->db->from('tbl_penjualan p');
-        $this->db->join('tbl_user u','u.nik = p.nik');
-        $this->db->join('tbl_barang b','b._id = p.kode_barang');
+        $this->db->join('tbl_user u','u._id = p.id_user');
+        $this->db->join('tbl_barang b','b._id = p.id_barang');
         if(isset($_POST['search_data'])) {
             $this->db->group_start();
             $this->db->like('p.nama_pembeli',$search,'both');
             $this->db->or_like('p.alamat',$search,'both');
+            $this->db->or_like('p.tgl_tempo',$search,'both');
             $this->db->or_like('u.nama',$search,'both');
+            $this->db->or_like('p.no_faktur',$search,'both');
             $this->db->group_end();
         }
         $this->db->order_by($sort,$order);
@@ -212,19 +216,19 @@ class Backend_model extends CI_Model
         $result = array();
         $this->db->select('p.*,u.nama, b.nama_barang');
         $this->db->from('tbl_penjualan p');
-        $this->db->join('tbl_user u','u.nik = p.nik');
-        $this->db->join('tbl_barang b','b._id = p.kode_barang');
+        $this->db->join('tbl_user u','u._id = p.id_user');
+        $this->db->join('tbl_barang b','b._id = p.id_barang');
         if(isset($_POST['search_data'])) {
             $this->db->group_start();
             $this->db->like('p.nama_pembeli',$search,'both');
             $this->db->group_end();
         }
-        $this->db->where('p.nik',$id);
+        $this->db->where('p.id_user',$id);
         $result['total'] = $this->db->get('')->num_rows();
         $this->db->select('p.*,u.nama, b.nama_barang');
         $this->db->from('tbl_penjualan p');
-        $this->db->join('tbl_user u','u.nik = p.nik');
-        $this->db->join('tbl_barang b','b._id = p.kode_barang');
+        $this->db->join('tbl_user u','u._id = p.id_user');
+        $this->db->join('tbl_barang b','b._id = p.id_barang');
         if(isset($_POST['search_data'])) {
             $this->db->group_start();
             $this->db->like('p.nama_pembeli',$search,'both');
@@ -232,7 +236,7 @@ class Backend_model extends CI_Model
         }
         $this->db->order_by($sort,$order);
         $this->db->limit($rows,$offset);
-        $this->db->where('p.nik',$id);
+        $this->db->where('p._id',$id);
         $query=$this->db->get();    
 
         $item = $query->result_array();    
@@ -251,11 +255,11 @@ class Backend_model extends CI_Model
 
         $this->db->select('p.*,u.nama, j.no_faktur, j.alamat, j.nama_pembeli, j.tgl_tempo');
         $this->db->from('tbl_penagihan p');
-        $this->db->join('tbl_penjualan j','j.no_faktur = p.kode_faktur');
-        $this->db->join('tbl_user u','u.nik = p.id_penagih');
+        $this->db->join('tbl_penjualan j','j.no_faktur = p.no_faktur');
+        $this->db->join('tbl_user u','u._id = p.id_user');
         if(isset($_POST['search_data'])) {
             $this->db->group_start();
-            $this->db->like('p.kode_faktur',$search,'both');
+            $this->db->like('p.no_faktur',$search,'both');
             $this->db->or_like('j.alamat',$search,'both');
             $this->db->or_like('u.nama',$search,'both');
             $this->db->or_like('j.nama_pembeli',$search,'both');
@@ -264,11 +268,11 @@ class Backend_model extends CI_Model
         $result['total'] = $this->db->get('')->num_rows();
         $this->db->select('p.*,u.nama, j.no_faktur, j.alamat, j.nama_pembeli, j.tgl_tempo');
         $this->db->from('tbl_penagihan p');
-        $this->db->join('tbl_penjualan j','j.no_faktur = p.kode_faktur');
-        $this->db->join('tbl_user u','u.nik = p.id_penagih');
+        $this->db->join('tbl_penjualan j','j.no_faktur = p.no_faktur');
+        $this->db->join('tbl_user u','u._id = p.id_user');
         if(isset($_POST['search_data'])) {
             $this->db->group_start();
-            $this->db->like('p.kode_faktur',$search,'both');
+            $this->db->like('p.no_faktur',$search,'both');
             $this->db->or_like('j.alamat',$search,'both');
             $this->db->or_like('u.nama',$search,'both');
             $this->db->or_like('j.nama_pembeli',$search,'both');
@@ -280,6 +284,12 @@ class Backend_model extends CI_Model
         $item = $query->result_array();    
         $result = array_merge($result, ['rows' => $item]);
         return $result;
+    }
+    function getTotalBayar($kode){
+        $this->db->select('*');
+        $this->db->from('tbl_penagihan');
+        $this->db->where('no_faktur',$kode);
+        return $this->db->get();
     }
     function getPenagihanById($id){
 

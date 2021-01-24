@@ -386,10 +386,11 @@ class Admin extends CI_Controller {
         $id_barang = $this->input->post('id_barang', TRUE);
         $status = $this->input->post('status_penjualan', TRUE);
         // $idSales = 1; <-- harus ganti dengan session
-        $idSales = 11215176;
+        $idSales = 1;
         $tgl = $this->input->post('tgl_jual',TRUE);
         $tempo = $this->input->post('tgl_tempo');
         $barang = $this->backend_model->getBarangById($id_barang)->row();
+        $bayar = "0";
         $total = $barang->harga_barang;
         if($status == 0){
             $tempo = 0;
@@ -397,16 +398,17 @@ class Admin extends CI_Controller {
             $totalTagih = $total/$status;
             $dataPenagihan = array(
                 'kode_bayar'        => $kode . '-1',
-                'kode_faktur'       => $kode,
+                'no_faktur'       => $kode,
                 'total_bayar'       => $totalTagih,
                 'tgl_bayar'         => $tgl,
-                'id_penagih'        => $idSales,
+                'id_user'        => $idSales,
             );
             $isTagih = $this->global_model->insert('tbl_penagihan',$dataPenagihan);
             if(!$isTagih){
                 echo json_encode(array('errorMsg'=>'Error Penagihan.'));
             }
             $tempo = $this->input->post('tgl_tempo');
+            $bayar = "1";
         }
         $stokLama = $barang->stok;
         $dataStok = array();
@@ -426,9 +428,10 @@ class Admin extends CI_Controller {
             'alamat'            => $alamat,
             'no_telp'           => $tlfn,
             'tgl_transaksi'     => $tgl,
-            'kode_barang'       => $id_barang,
-            'nik'               => $idSales,
+            'id_barang'         => $id_barang,
+            'id_user'           => $idSales,
             'status_penjualan'  => $status,
+            'status_bayar'      => $bayar,
             'tgl_tempo'         => $tempo,
             'total'             => $total
         );
@@ -474,6 +477,27 @@ class Admin extends CI_Controller {
     }
     function approvePenagihan(){
 
+    }
+    function savePenagihan(){
+        $kode = $this->input->post('kode_faktur',TRUE);
+        $total = $this->input->post('total_bayar',TRUE);
+        $tgl_bayar = $this->input->post('tgl_bayar',TRUE);
+        $kaliBayar = $this->backend_model->getTotalBayar($kode);
+        $kodeBaru = $kode .'-'.(($kaliBayar->num_rows())+1);
+        $id = 1;
+        $data = array(
+            'kode_bayar'    => $kodeBaru,
+            'no_faktur'     => $kode,
+            'total_bayar'   => $total,
+            'tgl_bayar'     => $tgl_bayar,
+            'id_user'       => $id,
+        );
+        $result = $this->global_model->insert('tbl_penagihan',$data);
+        if ($result){
+            echo json_encode(array('message'=>'Save Success'));
+        } else {
+            echo json_encode(array('errorMsg'=>'Some errors occured.'));
+        }
     }
     //end penagihan
     //end modul transaksi

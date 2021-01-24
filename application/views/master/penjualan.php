@@ -23,8 +23,9 @@
 	                      <th field="tgl_transaksi" width="10%">Tanggal Penjualan</th>
 	                      <th field="nama_barang" width="15%">Nama Barang</th>
 	                      <th field="nama" width="10%">Sales</th>
-	                      <th field="status_penjualan" data-options="formatter:formatStatusBeli" width="5%">Metode Bayar</th>
-	                      <th field="tgl_tempo" width="5%">Jatuh Tempo</th>
+	                      <th field="status_penjualan" data-options="formatter:formatStatusBeli" width="5%" sortable="true">Pembelian</th>
+	                      <th field="status_bayar" data-options="formatter:formatStatusBayar" width="5%" sortable="true">Status Pembayaran</th>
+	                      <th field="tgl_tempo" width="5%" sortable="true">Jatuh Tempo</th>
 	                      <th field="total" data-options="formatter:formatRupiah" width="10%">Jumlah</th>
 	                      <th field="last_update" data-options="formatter:formatTerakhirBayar" width="10%">Terakhir Bayar</th>
 	                      <th field="status_approve" data-options="formatter:formatApprove" width="10%">Approval</th>
@@ -53,7 +54,7 @@
 	  </div>
 	  <!-- /.card-header -->
 	  <!-- Dialog -->
-	  <div id="dialog-form" class="easyui-window" title="Add New Goods" data-options="modal:true,closed:true,iconCls:'icon-save',inline:false,onResize:function(){
+	  	<div id="dialog-form" class="easyui-window" title="Add New Goods" data-options="modal:true,closed:true,iconCls:'icon-save',inline:false,onResize:function(){
 	          $(this).window('hcenter');
 	      }" style="width:100%;max-width:500px;padding:30px 60px;">
 	      	<form id="ff" class="easyui-form" method="post" data-options="novalidate:false" enctype="multipart/form-data">
@@ -86,7 +87,20 @@
 					<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="submitForm()">Simpan</a>
 					<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="javascript:jQuery('#dialog-form').dialog('close')">Batal</a>
 				</div>
-	   </div>
+	   	</div>
+	  	<div id="catatan-form" class="easyui-window" title="Tambah Catatan" data-options="modal:true,closed:true,iconCls:'icon-save',inline:false,onResize:function(){
+	          $(this).window('hcenter');
+	      }" style="width:100%;max-width:500px;padding:30px 60px;">
+	      	<form id="catatan" class="easyui-form" method="post" data-options="novalidate:false" enctype="multipart/form-data">
+				<div style="margin-bottom:20px">
+					<textarea class="easyui-textbox" name="catatan" style="width:100%" data-options="label:'Catatan :',required:true,multiline:true,height:500"></textarea>
+				</div>
+				</form>
+				<div id="dialog-buttons">
+					<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="submitForm()">Simpan</a>
+					<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="javascript:jQuery('#dialog-form').dialog('close')">Batal</a>
+				</div>
+	   	</div>
 	</div>
 </div>
 <script type="text/javascript">
@@ -113,14 +127,8 @@ $(document).ready(function(){
 		{ 'metode': 'Tunai', "value": 0 },
 		{ 'metode': 'Kredit 7 Bulan', "value": 7 },
 		{ 'metode': 'Kredit 10 Bulan', "value": 10 },
-	],
-	onChange: function(e){
-		if(e==0){
-			$('#tempo').textbox('reset');
-			$('#tempo').textbox('readonly',true);
-		}
-	}
-});
+	]
+	});
 })
 function doSearch(){
 	$('#dgGrid').datagrid('load',{
@@ -157,6 +165,13 @@ function newForm(){
 	$('#dialog-form').dialog('open').dialog('setTitle','Add New Goods');
 	$('#ff').form('clear');
 	url = 'savePenjualan';
+}
+function catatan(){
+	var row = $('#dgGrid').datagrid('getSelected');
+		if (row){
+			$('#catatan-form').dialog('open').dialog('setTitle','Edit Barang' + row.nama_barang);
+			url = 'updatePenjualan?id='+row._id;
+		}
 }
 function editForm(){
 	var row = $('#dgGrid').datagrid('getSelected');
@@ -205,6 +220,15 @@ function formatStatusBeli(i,r){
     }else{
         return 'Kredit';
     }
+}
+function formatStatusBayar(i,r){
+    if(r.status_bayar=="0"){
+        return 'Tunai';
+    }else if(r.status_bayar=="1"){
+        return 'Belum Lunas';
+    }else{
+		return 'Sudah Lunas';
+	}
 }
 function formatTerakhirBayar(i,r){
 	let t = r.last_update.split(/[- :]/);

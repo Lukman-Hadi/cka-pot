@@ -17,11 +17,12 @@
 	              <thead>
 	                  <tr>
 	                      <th field="kode_bayar" width="10%">No Faktur</th>
-	                      <th field="kode_faktur" width="10%">No Faktur Penjualan</th>
+	                      <th field="no_faktur" width="10%">No Faktur Penjualan</th>
 	                      <th field="nama_pembeli"  width="20%">Nama Konsumen</th>
 	                      <th field="alamat"  width="10%">Alamat Konsumen</th>
 	                      <th field="tgl_bayar" width="10%">Tanggal Penagihan</th>
 	                      <th field="nama" width="15%">Collector</th>
+	                      <th field="total_bayar" data-options="formatter:formatRupiah" width="10%">Jumlah Bayar</th>
 	                      <th field="tgl_tempo" width="10%">Tanggal Jatuh Tempo</th>
 	                      <th field="status" data-options="formatter:formatApprove" width="10%">Approval</th>
 	                  </tr>
@@ -57,7 +58,7 @@
 					<input id="kode" class="easyui-textbox" name="kode_faktur" style="width:100%" data-options="label:'No Faktur:',required:true">
 				</div>
 	      		<div style="margin-bottom:20px">
-					<input class="easyui-numberbox" name="total_barang" style="width:100%" data-options="label:'Harga Barang:',required:true,groupSeparator:'.',prefix:'Rp '">
+					<input class="easyui-numberbox" name="total_bayar" style="width:100%" data-options="label:'Total Bayar:',required:true,groupSeparator:'.',prefix:'Rp '">
 				</div>
 				<div style="margin-bottom:20px">
 					<input type="date" class="easyui-textbox" name="tgl_bayar" style="width:100%" data-options="label:'Tanggal :',required:true,">
@@ -122,7 +123,7 @@ function submitForm(){
 function newForm(){
 	$('#dialog-form').dialog('open').dialog('setTitle','Add New Goods');
 	$('#ff').form('clear');
-	url = 'savePenjualan';
+	url = 'savePenagihan';
 }
 function editForm(){
 	var row = $('#dgGrid').datagrid('getSelected');
@@ -163,7 +164,7 @@ function destroy(){
     }
 }
 function formatRupiah(index, row){
-	return accounting.formatMoney(row.total, "Rp ", 0, ".", ",");
+	return accounting.formatMoney(row.total_bayar, "Rp ", 0, ".", ",");
 }
 function formatStatusBeli(i,r){
     if(r.status_penjualan==0){
