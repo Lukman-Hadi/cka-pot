@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Jan 22, 2021 at 01:58 PM
+-- Generation Time: Jan 24, 2021 at 09:46 AM
 -- Server version: 10.4.14-MariaDB
 -- PHP Version: 7.2.34
 
@@ -44,8 +44,8 @@ CREATE TABLE `tbl_barang` (
 --
 
 INSERT INTO `tbl_barang` (`_id`, `kode_barang`, `nama_barang`, `harga_barang`, `stok`, `created_at`) VALUES
-(1, 'P-001', 'Panci Ajaib', 700000, 100, '2021-01-20 15:53:53'),
-(2, 'P-002', 'Panci Kurang Ajaib Tapi Boong', 1000000, 130, '2021-01-20 15:56:51');
+(1, 'P-001', 'Panci Ajaib', 700000, 93, '2021-01-23 15:30:19'),
+(2, 'P-002', 'Panci Kurang Ajaib Tapi Boong', 1000000, 129, '2021-01-23 13:53:42');
 
 -- --------------------------------------------------------
 
@@ -73,19 +73,47 @@ INSERT INTO `tbl_barang_masuk` (`_id`, `kode_faktur`, `id_barang`, `jumlah`, `tg
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `tbl_catatan`
+--
+
+DROP TABLE IF EXISTS `tbl_catatan`;
+CREATE TABLE `tbl_catatan` (
+  `_id` int(11) NOT NULL,
+  `id_penjualan` int(11) NOT NULL,
+  `catatan` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `tbl_penagihan`
 --
 
 DROP TABLE IF EXISTS `tbl_penagihan`;
 CREATE TABLE `tbl_penagihan` (
   `_id` int(11) NOT NULL,
-  `kode_bayar` int(11) NOT NULL,
-  `no_faktur` int(11) NOT NULL,
+  `kode_bayar` char(11) NOT NULL,
+  `no_faktur` char(11) NOT NULL,
   `total_bayar` int(11) NOT NULL,
   `tgl_bayar` date NOT NULL,
+  `id_user` int(11) NOT NULL,
   `status` enum('0','1') NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `tbl_penagihan`
+--
+
+INSERT INTO `tbl_penagihan` (`_id`, `kode_bayar`, `no_faktur`, `total_bayar`, `tgl_bayar`, `id_user`, `status`, `created_at`) VALUES
+(5, 'F-002-1', 'F-002', 70000, '2020-01-01', 1, '0', '2021-01-23 14:07:05'),
+(6, 'F-003-1', 'F-003', 100000, '2021-01-13', 1, '0', '2021-01-23 14:20:55'),
+(7, 'F-002-2', 'F-002', 70000, '2020-01-01', 1, '0', '2021-01-23 14:55:25'),
+(8, 'F-002-3', 'F-002', 70000, '2020-01-01', 1, '0', '2021-01-23 14:55:43'),
+(9, 'F-003-2', 'F-003', 50000, '2021-01-23', 1, '0', '2021-01-23 15:03:51'),
+(10, 'F-003-3', 'F-003', 50000, '2021-01-23', 1, '0', '2021-01-23 15:04:33'),
+(11, 'F-006-1', 'F-006', 70000, '2021-01-23', 1, '0', '2021-01-23 15:30:19'),
+(12, 'F-006-2', 'F-006', 70000, '2021-01-23', 1, '0', '2021-01-23 15:31:54');
 
 -- --------------------------------------------------------
 
@@ -101,12 +129,13 @@ CREATE TABLE `tbl_penjualan` (
   `alamat` longtext NOT NULL,
   `no_telp` varchar(50) NOT NULL,
   `tgl_transaksi` date NOT NULL,
-  `kode_barang` int(11) NOT NULL,
-  `nik` char(11) NOT NULL,
+  `id_barang` int(11) NOT NULL,
+  `id_user` char(11) NOT NULL,
   `status_bayar` enum('0','1','2') NOT NULL,
-  `status_penjualan` enum('0','1') NOT NULL,
+  `status_penjualan` int(11) NOT NULL,
   `tgl_tempo` int(11) NOT NULL,
   `total` int(11) NOT NULL,
+  `status_approve` enum('0','1') NOT NULL DEFAULT '0',
   `last_update` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -114,8 +143,13 @@ CREATE TABLE `tbl_penjualan` (
 -- Dumping data for table `tbl_penjualan`
 --
 
-INSERT INTO `tbl_penjualan` (`_id`, `no_faktur`, `nama_pembeli`, `alamat`, `no_telp`, `tgl_transaksi`, `kode_barang`, `nik`, `status_bayar`, `status_penjualan`, `tgl_tempo`, `total`, `last_update`) VALUES
-(1, 'F-001', 'Bokri', 'JAUH BET', '0888888888', '2021-01-19', 1, '11215176', '0', '0', 0, 700000, '2021-01-20 16:53:45');
+INSERT INTO `tbl_penjualan` (`_id`, `no_faktur`, `nama_pembeli`, `alamat`, `no_telp`, `tgl_transaksi`, `id_barang`, `id_user`, `status_bayar`, `status_penjualan`, `tgl_tempo`, `total`, `status_approve`, `last_update`) VALUES
+(1, 'F-001', 'Bokri', 'JAUH BET', '0888888888', '2021-01-19', 1, '1', '0', 0, 0, 700000, '0', '2021-01-23 13:46:59'),
+(3, 'F-002', 'Lexvet', 'Jauh', '0', '2020-01-01', 1, '1', '1', 10, 5, 700000, '1', '2021-01-23 14:29:43'),
+(4, 'F-003', 'Lexvet', 'Testing', '08765', '2021-01-13', 1, '1', '1', 7, 6, 700000, '1', '2021-01-23 14:29:37'),
+(6, 'F-004', 'Test', 'test', '8', '2021-01-23', 1, '1', '0', 0, 0, 700000, '1', '2021-01-23 14:29:30'),
+(7, 'F-005', 'Testing', 'Jauh Bet', '8989898', '2021-01-23', 1, '1', '0', 0, 0, 700000, '1', '2021-01-23 15:31:11'),
+(8, 'F-006', 'Lukman H', 'shshshshsh', '9898922', '2021-01-23', 1, '1', '1', 10, 7, 700000, '1', '2021-01-23 15:31:18');
 
 -- --------------------------------------------------------
 
@@ -206,6 +240,12 @@ ALTER TABLE `tbl_barang_masuk`
   ADD PRIMARY KEY (`_id`);
 
 --
+-- Indexes for table `tbl_catatan`
+--
+ALTER TABLE `tbl_catatan`
+  ADD PRIMARY KEY (`_id`);
+
+--
 -- Indexes for table `tbl_penagihan`
 --
 ALTER TABLE `tbl_penagihan`
@@ -254,16 +294,22 @@ ALTER TABLE `tbl_barang_masuk`
   MODIFY `_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
+-- AUTO_INCREMENT for table `tbl_catatan`
+--
+ALTER TABLE `tbl_catatan`
+  MODIFY `_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `tbl_penagihan`
 --
 ALTER TABLE `tbl_penagihan`
-  MODIFY `_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `tbl_penjualan`
 --
 ALTER TABLE `tbl_penjualan`
-  MODIFY `_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `tbl_perusahaan`
