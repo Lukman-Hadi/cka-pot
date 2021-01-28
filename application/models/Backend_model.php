@@ -206,6 +206,53 @@ class Backend_model extends CI_Model
         return $result;
 
     }
+    function getPenjualanApprove(){
+        $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
+        $rows = isset($_POST['rows']) ? intval($_POST['rows']) : 20;
+        $sort = isset($_POST['sort']) ? strval($_POST['sort']) : 'p._id';
+        $order = isset($_POST['order']) ? strval($_POST['order']) : 'ASC';
+        $search = isset($_POST['search_data']) ? strval($_POST['search_data']) : '';
+        $offset = ($page-1)*$rows;
+        $result = array();
+
+        $this->db->select('p.*,u.nama, b.nama_barang');
+        $this->db->from('tbl_penjualan p');
+        $this->db->join('tbl_user u','u._id = p.id_user');
+        $this->db->join('tbl_barang b','b._id = p.id_barang');
+        $this->db->where('status_approve','0');
+        if(isset($_POST['search_data'])) {
+            $this->db->group_start();
+            $this->db->like('p.nama_pembeli',$search,'both');
+            $this->db->or_like('p.alamat',$search,'both');
+            $this->db->or_like('u.nama',$search,'both');
+            $this->db->or_like('p.tgl_tempo',$search,'both');
+            $this->db->or_like('p.no_faktur',$search,'both');
+            $this->db->group_end();
+        }
+        $result['total'] = $this->db->get('')->num_rows();
+        $this->db->select('p.*,u.nama, b.nama_barang');
+        $this->db->from('tbl_penjualan p');
+        $this->db->join('tbl_user u','u._id = p.id_user');
+        $this->db->join('tbl_barang b','b._id = p.id_barang');
+        $this->db->where('status_approve','0');
+        if(isset($_POST['search_data'])) {
+            $this->db->group_start();
+            $this->db->like('p.nama_pembeli',$search,'both');
+            $this->db->or_like('p.alamat',$search,'both');
+            $this->db->or_like('p.tgl_tempo',$search,'both');
+            $this->db->or_like('u.nama',$search,'both');
+            $this->db->or_like('p.no_faktur',$search,'both');
+            $this->db->group_end();
+        }
+        $this->db->order_by($sort,$order);
+        $this->db->limit($rows,$offset);
+        $query=$this->db->get();    
+
+        $item = $query->result_array();    
+        $result = array_merge($result, ['rows' => $item]);
+        return $result;
+
+    }
     function getPenjualanById($id){
         $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
         $rows = isset($_POST['rows']) ? intval($_POST['rows']) : 20;
@@ -242,6 +289,21 @@ class Backend_model extends CI_Model
         $item = $query->result_array();    
         $result = array_merge($result, ['rows' => $item]);
         return $result;
+    }
+
+    function getDetailPenjualan($id){
+        $this->db->select('j.*, b.nama_barang');
+        $this->db->from('tbl_penjualan j');
+        $this->db->join('tbl_barang b','b._id = j.id_barang');
+        $this->db->where('j._id',$id);
+        return $this->db->get();
+    }
+
+    function getDetailPenagihan($noFaktur){
+        $this->db->select('*');
+        $this->db->from('tbl_penagihan');
+        $this->db->where('no_faktur',$noFaktur);
+        return $this->db->get();
     }
     
     function getPenagihan(){
@@ -292,9 +354,6 @@ class Backend_model extends CI_Model
         return $this->db->get();
     }
     function getPenagihanById($id){
-
-    }
-    function getDetailPenjualan(){
 
     }
 }

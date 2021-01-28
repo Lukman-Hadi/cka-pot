@@ -9,7 +9,7 @@
 	            class="easyui-datagrid" 
 	            rowNumbers="true" 
 	            pagination="true" 
-	            url="<?= base_url('admin/getPenjualan') ?>" 
+	            url="<?= base_url('admin/getApprovePenjualan') ?>" 
 	            pageSize="50" 
 	            pageList="[10,20,50,75,100,125,150,200]" 
 	            nowrap="true" 
@@ -36,11 +36,9 @@
 	          <div id="toolbar" style="padding: 10px">
 	              <div class="row ml-1">
 	                  <div class="col-sm-6">
-	                  	<a href="javascript:void(0);" class="easyui-linkbutton" iconCls="icon-add" plain="false" onclick="newForm()">Add</a>
+	                  	<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="false" onclick="approve()">Approve</a>
 	                  	<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="false" onclick="destroy()">Delete</a>
-	                  	<a href="javascript:void(0)" class="easyui-linkbutton" plain="false" onclick="edit(">Edit</a>
 	                  	<a href="javascript:void(0)" class="easyui-linkbutton" plain="false" onclick="detail()">Detail</a>
-	                  	<a href="javascript:void(0)" class="easyui-linkbutton" plain="false" onclick="catatan()">Tambah Catatan</a>
 	                  </div>
 	                  
 	                  <div class="col-sm-6 pull-right">
@@ -52,55 +50,6 @@
 	        </div>
 	    </div>
 	  </div>
-	  <!-- /.card-header -->
-	  <!-- Dialog -->
-	  	<div id="dialog-form" class="easyui-window" title="Add New Goods" data-options="modal:true,closed:true,iconCls:'icon-save',inline:false,onResize:function(){
-	          $(this).window('hcenter');
-	      }" style="width:100%;max-width:500px;padding:30px 60px;">
-	      	<form id="ff" class="easyui-form" method="post" data-options="novalidate:false" enctype="multipart/form-data">
-	      		<div style="margin-bottom:20px">
-					<input class="easyui-textbox" name="kode_faktur" style="width:100%" data-options="label:'No Faktur:',required:true">
-				</div>
-	      		<div style="margin-bottom:20px">
-					<input class="easyui-textbox" name="nama_pembeli" style="width:100%" data-options="label:'Nama:',required:true">
-				</div>
-				<div style="margin-bottom:20px">
-					<textarea class="easyui-textbox" name="alamat_pembeli" style="width:100%" data-options="label:'Alamat :',required:true,multiline:true,height:100"></textarea>
-				</div>
-				<div style="margin-bottom:20px">
-					<input type="number" class="easyui-textbox" name="no_tlfn" style="width:100%" data-options="label:'No Tlfn:',required:true">
-				</div>
-				<div style="margin-bottom:20px">
-					<input id="barang" class="easyui-textbox" name="id_barang" style="width:100%" data-options="label:'Produk :',required:true">
-				</div>
-				<div style="margin-bottom:20px">
-					<input id="metode" class="easyui-textbox" name="status_penjualan" style="width:100%" data-options="label:'Termin :',required:true">
-				</div>
-				<div style="margin-bottom:20px">
-					<input id="tempo" type="number" value="0" class="easyui-textbox" name="tgl_tempo" style="width:100%" data-options="label:'Jatuh Tempo:',readonly:false, initValue:0, setText:'0'">
-				</div>
-				<div style="margin-bottom:20px">
-					<input type="date" class="easyui-textbox" name="tgl_jual" style="width:100%" data-options="label:'Tanggal Jual:', required: true">
-				</div>
-				</form>
-				<div id="dialog-buttons">
-					<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="submitForm()">Simpan</a>
-					<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="javascript:jQuery('#dialog-form').dialog('close')">Batal</a>
-				</div>
-	   	</div>
-	  	<div id="catatan-form" class="easyui-window" title="Tambah Catatan" data-options="modal:true,closed:true,iconCls:'icon-save',inline:false,onResize:function(){
-	          $(this).window('hcenter');
-	      }" style="width:100%;max-width:500px;padding:30px 60px;">
-	      	<form id="catatan" class="easyui-form" method="post" data-options="novalidate:false" enctype="multipart/form-data">
-				<div style="margin-bottom:20px">
-					<textarea class="easyui-textbox" name="catatan" style="width:100%" data-options="label:'Catatan :',required:true,multiline:true,height:500"></textarea>
-				</div>
-				</form>
-				<div id="dialog-buttons">
-					<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="saveCatatan()">Simpan</a>
-					<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="javascript:jQuery('#catatan-form').dialog('close')">Batal</a>
-				</div>
-	   	</div>
 	</div>
 </div>
 <script type="text/javascript">
@@ -172,6 +121,29 @@ function catatan(){
 			$('#catatan-form').dialog('open').dialog('setTitle','Tambah Catatan ' + row.no_faktur);
 			url = 'saveCatatanPenjualan?id='+row._id;
 		}
+}
+function approve(){
+    var row = $('#dgGrid').datagrid('getSelected');
+    if (row){
+        $.messager.confirm('Confirm','Are you sure you want to Approve this sales ? '+ row.no_faktur,function(r){
+            if (r){
+                $.post('approvePenjualan',{id:row._id},function(result){
+                    if (result.errorMsg){
+                        Toast.fire({
+			              type: 'error',
+			              title: ''+result.errorMsg+'.'
+			            })
+                    } else {
+                        Toast.fire({
+		                  type: 'success',
+		                  title: ''+result.message+'.'
+		                })
+                        $('#dgGrid').datagrid('reload');
+                    }
+                },'json');
+            }
+        });
+    }
 }
 function saveCatatan(){
 	var string = $("#catatan").serialize();

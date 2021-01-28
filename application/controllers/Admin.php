@@ -370,6 +370,26 @@ class Admin extends CI_Controller {
         $data['js_files'][] = base_url() . 'assets/admin/easyui/plugins/datagrid-scrollview.js';
         $data['js_files'][] = base_url() . 'assets/admin/easyui/plugins/datagrid-scrollview.js';
         $data['js_files'][] = base_url() . 'assets/admin/plugins/accounting/accounting.min.js';
+        $detail = $this->backend_model->getDetailPenjualan($this->uri->segment(3))->row();
+        $detailTagih = $this->backend_model->getDetailPenagihan($detail->no_faktur);
+        $tunggakan=0;
+        if($detail->status_penjualan != 0 ){
+            $wajibBayar = $detail->total / $detail->status_penjualan;
+            $awalBeli = new DateTime($detail->tgl_transaksi);
+            $tgltempo = date('Y').'-'.date('m').'-'.$detail->tgl_tempo;
+            $skrg = new DateTime($tgltempo);
+            $interval = $awalBeli->diff($skrg)->m;
+            if(substr($detail->tgl_transaksi,8,2) > $detail->tgl_tempo){
+                $interval +=1;
+            }
+            if(date('d') < $detail->tgl_tempo ){
+                $interval -=1;
+            }
+            $tunggakan = $wajibBayar * ($interval+1);
+        }
+        $data['tunggakan'] = $tunggakan;
+        $data['detail'] = $detail;
+        $data['detailtagih'] = $detailTagih->result();
         $this->template->load('template','master/detailpenjualan',$data);
     }
     function updatePenjualan(){
@@ -442,6 +462,20 @@ class Admin extends CI_Controller {
             echo json_encode(array('errorMsg'=>'Some errors occured.'));
         }
     }
+    function saveCatatanPenjualan(){
+        $idPenjualan = $this->input->get('id');
+        $catatan = $this->input->post('catatan');
+        $data = array(
+            'id_penjualan'  => $idPenjualan,
+            'catatan'       => $catatan      
+        );
+        $result = $this->global_model->insert('tbl_catatan',$data);
+        if ($result){
+            echo json_encode(array('message'=>'Save Catatan Success'));
+        } else {
+            echo json_encode(array('errorMsg'=>'Some errors occured.'));
+        }
+    }
     function isKodePenjualan(){
         $this->output->set_content_type('application/json');
         $barang = $this->backend_model->getPenjualanKredit();
@@ -503,4 +537,40 @@ class Admin extends CI_Controller {
     //end modul transaksi
 
     //Modul Laporan
+    //end modul laporan
+
+    //modul approval//
+    //approve penjualan//
+    function penjualanApprove(){
+        $data['title']  = 'Data Penjualan Cka';
+        $data['collapsed'] = '';
+        $data['css_files'][] = base_url() . 'assets/admin/easyui/themes/material/easyui.css';
+        $data['css_files'][] = base_url() . 'assets/admin/easyui/themes/icon.css';
+        $data['js_files'][] = base_url() . 'assets/admin/easyui/jquery.easyui.min.js';
+        $data['js_files'][] = base_url() . 'assets/admin/easyui/datagrid-groupview.js';
+        $data['js_files'][] = base_url() . 'assets/admin/easyui/plugins/datagrid-scrollview.js';
+        $data['js_files'][] = base_url() . 'assets/admin/easyui/plugins/datagrid-scrollview.js';
+        $data['js_files'][] = base_url() . 'assets/admin/plugins/accounting/accounting.min.js';
+        $this->template->load('template','master/penjualanapprove',$data);
+    }
+    function getApprovePenjualan(){
+        $this->output->set_content_type('application/json');
+		$barang = $this->backend_model->getPenjualanApprove();
+		echo json_encode($barang);
+    }
+    function approvePenjualan(){
+        $id = $this->input->post('id');
+        $rows = $this->db->get_where('tbl_penjualan', array('_id'=>$id))->row_array();
+        if ($rows['status_approve'] == '0'){
+            $approve = '1';
+        }else{
+            $approve = '0';
+        }
+        $result = $this->global_model->update('tbl_penjualan',array('status_approve'=>$approve), array('_id'=>$id));
+        if ($result){
+            echo json_encode(array('message'=> 'Faktur '.$rows['no_faktur'].' Approve Success'));
+        } else {
+            echo json_encode(array('errorMsg'=>'Some errors occured.'));
+        }
+    }
 }

@@ -128,7 +128,7 @@
 				</li>
 				<li class="nav-header">Approval</li>
 				<li class="nav-item">
-					<a href="pages/calendar.html" class="nav-link">
+					<a href="<?=base_url()?>admin/penjualanapprove" class="nav-link">
 						<i class="nav-icon fa fa-check-double"></i>
 						<p>
 							Approval Penjualan
