@@ -356,8 +356,9 @@ class Admin extends CI_Controller {
         $this->template->load('template','master/penjualan',$data);
     }
     function getPenjualan(){
+        $month = date('m');
         $this->output->set_content_type('application/json');
-		$barang = $this->backend_model->getPenjualan();
+		$barang = $this->backend_model->getPenjualan($month);
 		echo json_encode($barang);
     }
     function getDetailPenjualan(){
@@ -513,7 +514,7 @@ class Admin extends CI_Controller {
 
     }
     function savePenagihan(){
-        $kode = $this->input->post('kode_faktur',TRUE);
+        $kode = $this->input->get('kode',TRUE);
         $total = $this->input->post('total_bayar',TRUE);
         $tgl_bayar = $this->input->post('tgl_bayar',TRUE);
         $kaliBayar = $this->backend_model->getTotalBayar($kode);
@@ -559,16 +560,32 @@ class Admin extends CI_Controller {
 		echo json_encode($barang);
     }
     function approvePenjualan(){
-        $id = $this->input->post('id');
+        $id         = $this->input->post('id');
+        $idPenagih  = $this->input->post('id_penagih');
         $rows = $this->db->get_where('tbl_penjualan', array('_id'=>$id))->row_array();
         if ($rows['status_approve'] == '0'){
             $approve = '1';
         }else{
             $approve = '0';
         }
-        $result = $this->global_model->update('tbl_penjualan',array('status_approve'=>$approve), array('_id'=>$id));
+        $result = $this->global_model->update('tbl_penjualan',array('status_approve'=>$approve,'id_penagih'=>$idPenagih), array('_id'=>$id));
         if ($result){
             echo json_encode(array('message'=> 'Faktur '.$rows['no_faktur'].' Approve Success'));
+        } else {
+            echo json_encode(array('errorMsg'=>'Some errors occured.'));
+        }
+    }
+    function isPenagih(){
+        $this->output->set_content_type('application/json');
+        $data = $this->backend_model->getIsPenagih();
+        echo json_encode($data);
+    }
+    function gantiPenagih(){
+        $id         = $this->input->get('id');
+        $idPenagih  = $this->input->post('id_kolektor');
+        $result     = $this->global_model->update('tbl_penjualan',array('id_penagih'=>$idPenagih),array('_id'=>$id));
+        if ($result){
+            echo json_encode(array('message'=> 'Ganti Success'));
         } else {
             echo json_encode(array('errorMsg'=>'Some errors occured.'));
         }

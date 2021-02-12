@@ -161,7 +161,7 @@ class Backend_model extends CI_Model
         $this->db->where_not_in('status_penjualan', array(0,11));
         return $this->db->get();
     }
-    function getPenjualan(){
+    function getPenjualan($month){
         $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
         $rows = isset($_POST['rows']) ? intval($_POST['rows']) : 20;
         $sort = isset($_POST['sort']) ? strval($_POST['sort']) : 'p._id';
@@ -170,9 +170,10 @@ class Backend_model extends CI_Model
         $offset = ($page-1)*$rows;
         $result = array();
 
-        $this->db->select('p.*,u.nama, b.nama_barang');
+        $this->db->select('p.*,u.nama, us.nama as penagih, b.nama_barang,(SELECT MONTH(created_at) from tbl_penagihan WHERE no_faktur = p.no_faktur ORDER BY _id DESC LIMIT 1) as bayar');
         $this->db->from('tbl_penjualan p');
         $this->db->join('tbl_user u','u._id = p.id_user');
+        $this->db->join('tbl_user us','us._id = p.id_penagih');
         $this->db->join('tbl_barang b','b._id = p.id_barang');
         if(isset($_POST['search_data'])) {
             $this->db->group_start();
@@ -184,9 +185,10 @@ class Backend_model extends CI_Model
             $this->db->group_end();
         }
         $result['total'] = $this->db->get('')->num_rows();
-        $this->db->select('p.*,u.nama, b.nama_barang');
+        $this->db->select('p.*,u.nama, us.nama as penagih, b.nama_barang,(SELECT MONTH(created_at) from tbl_penagihan WHERE no_faktur = p.no_faktur ORDER BY _id DESC LIMIT 1) as bayar');
         $this->db->from('tbl_penjualan p');
         $this->db->join('tbl_user u','u._id = p.id_user');
+        $this->db->join('tbl_user us','us._id = p.id_penagih');
         $this->db->join('tbl_barang b','b._id = p.id_barang');
         if(isset($_POST['search_data'])) {
             $this->db->group_start();
@@ -355,5 +357,12 @@ class Backend_model extends CI_Model
     }
     function getPenagihanById($id){
 
+    }
+    function getIsPenagih(){
+        $this->db->select('*');
+        $this->db->from('tbl_user');
+        $this->db->where('posisi',6);
+        $this->db->where('is_aktif',"1");
+        return $this->db->get()->result();
     }
 }

@@ -102,7 +102,11 @@
                                 <table class="table">
                                     <tr>
                                         <th style="width:50%">Total Pembayaran:</th>
-                                        <td>Rp <?= number_format($bayar,0,',','.'); ?></td>
+                                        <?php if(isset($tagih)){
+                                            echo "<td>Rp ".number_format($bayar,0,',','.')."</td>";
+                                        }else{
+                                            echo "<td>Rp ".number_format($detail->total,2,',','.')."</td>";
+                                        }?>
                                     </tr>
                                     <tr>
                                         <th>Tunggakan</th>
@@ -110,7 +114,11 @@
                                     </tr>
                                     <tr>
                                         <th>Total Hutang:</th>
-                                        <td>Rp <?= number_format(($hutang-$tagih->total_bayar),0,',','.'); ?></td>
+                                        <?php if(isset($tagih)){
+                                            echo "<td>Rp <?= number_format(($hutang-$tagih->total_bayar),0,',','.'); ?></td>";
+                                        }else{
+                                            echo "<td>LUNAS</td>";
+                                        }?>
                                     </tr>
                                 </table>
                             </div>
