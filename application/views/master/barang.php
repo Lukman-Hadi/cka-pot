@@ -18,12 +18,13 @@
 
 					<div id="toolbar" style="padding: 10px">
 						<div class="row ml-1">
+						<?php if($this->session->posisi == 8 ||$this->session->posisi == 1){ ?>
 							<div class="col-sm-6">
 								<a href="javascript:void(0);" class="easyui-linkbutton" iconCls="icon-add" plain="false" onclick="newForm()">Add</a>
 								<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-edit" plain="false" onclick="editForm()">Edit</a>
 								<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="false" onclick="destroy()">Delete</a>
 							</div>
-
+						<?php } ?>
 							<div class="col-sm-6 pull-right">
 								<input id="search" placeholder="Please Enter Search a Goods" style="width:60%;" align="right">
 								<a href="javascript:void(0);" id="btn_serach" class="easyui-linkbutton" iconCls="icon-search" plain="false" onclick="doSearch()">Search</a>

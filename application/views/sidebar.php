@@ -15,118 +15,58 @@
 
 		<!-- Sidebar Menu -->
 		<nav class="mt-2">
-			<ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+        <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+          <li class="nav-item">
+            <a href="<?= base_url('admin');?>" class="nav-link">
+              <i class="nav-icon fas fa-tachometer-alt"></i>
+              <p>Dashboard</p>
+            </a>
+          </li>
+          <?php 
+            $menu = $this->menu_model->getMenus($this->session->userdata('posisi'));
+            foreach ($menu->result() as $row) : 
+            $submenu=$this->menu_model->getSubMenus($this->session->userdata('posisi'),$row->_id);
+            if ($submenu->num_rows() > 0){ ?>
+                <li class="nav-item has-treeview">
+                  <a href="#" class="nav-link">
+                    <i class="nav-icon <?= $row->icon;?>"></i>
+                    <p>
+                      <?= $row->title;?>
+                      <i class="fas fa-angle-left right"></i>
+                      <span class="badge badge-info right"><?= $submenu->num_rows();?></span>
+                    </p>
+                  </a>
+                  <ul class="nav nav-treeview">
+                    <?php foreach ($submenu->result() as $sub) :?>
+                      <li class="nav-item">
+                          <a href="<?= base_url($sub->uri);?>" class="nav-link">
+                            <i class="<?= $sub->icon;?> nav-icon"></i>
+                            <p><?= $sub->title;?></p>
+                          </a>
+                      </li>
+                    <?php endforeach; ?>
+                  </ul>
+              </li>
+            <?php }else{ ?>
+            <li class="nav-item">
+              <a href="<?= base_url('admin/dashboard');?>" class="nav-link">
+                <i class="nav-icon <?= $row->icon;?>"></i>
+                <p><?= $row->title;?></p>
+              </a>
+            </li>
+          <?php } endforeach;?>
+		  <li class="nav-header">KUUK</li>
+		  <?php if($this->session->posisi == 2 || $this->session->posisi == 1 || $this->session->posisi == 6){ ?>
+			<?php if($this->session->posisi == 1 || $this->session->posisi == 6){ ?>
 				<li class="nav-item">
-					<a href="<?=base_url()?>" class="nav-link">
-						<i class="nav-icon fas fa-tachometer-alt"></i>
+					<a href="<?=base_url()?>admin/inputtagihan" class="nav-link">
+						<i class="nav-icon fa fa-check-double"></i>
 						<p>
-							Dashboard
+							Input Penagihan
 						</p>
 					</a>
 				</li>
-				<li class="nav-item has-treeview">
-					<a href="#" class="nav-link">
-						<i class="nav-icon fa fa-users"></i>
-						<p>
-							Users
-							<i class="fas fa-angle-left right"></i>
-							<span class="badge badge-info right">2</span>
-						</p>
-					</a>
-					<ul class="nav nav-treeview">
-						<li class="nav-item">
-							<a href="<?=base_url()?>admin/users" class="nav-link">
-								<i class="far fa-user fa-xs nav-icon"></i>
-								<p>Pegawai</p>
-							</a>
-						</li>
-						<li class="nav-item">
-							<a href="<?=base_url()?>admin/posisi" class="nav-link">
-								<i class="fas fa-user-shield nav-icon"></i>
-								<p>Posisi</p>
-							</a>
-						</li>
-					</ul>
-				</li>
-				<li class="nav-item has-treeview">
-					<a href="#" class="nav-link">
-						<i class="nav-icon fa fa-warehouse"></i>
-						<p>
-							Gudang
-							<i class="fas fa-angle-left right"></i>
-							<span class="badge badge-info right">2</span>
-						</p>
-					</a>
-					<ul class="nav nav-treeview">
-						<li class="nav-item">
-							<a href="<?=base_url()?>admin/barangMasuk" class="nav-link">
-								<i class="fa fa-truck-loading nav-icon"></i>
-								<p>Barang Masuk</p>
-							</a>
-						</li>
-						<li class="nav-item">
-							<a href="<?=base_url()?>admin/barang" class="nav-link">
-								<i class="fas fa-boxes nav-icon"></i>
-								<p>Barang</p>
-							</a>
-						</li>
-					</ul>
-				</li>
-				<li class="nav-item has-treeview">
-					<a href="#" class="nav-link">
-						<i class="nav-icon fa fa-cash-register"></i>
-						<p>
-							Transaksi
-							<i class="fas fa-angle-left right"></i>
-							<span class="badge badge-info right">2</span>
-						</p>
-					</a>
-					<ul class="nav nav-treeview">
-						<li class="nav-item">
-							<a href="<?=base_url()?>admin/penjualan" class="nav-link">
-								<i class="fa fa-file-invoice-dollar fa-xs nav-icon"></i>
-								<p>Penjualan</p>
-							</a>
-						</li>
-						<li class="nav-item">
-							<a href="<?=base_url()?>admin/penagihan" class="nav-link">
-								<i class="fas fa-receipt nav-icon"></i>
-								<p>Penagihan</p>
-							</a>
-						</li>
-					</ul>
-				</li>
-				<li class="nav-item has-treeview">
-					<a href="#" class="nav-link">
-						<i class="nav-icon fa fa-file-contract"></i>
-						<p>
-							Laporan
-							<i class="fas fa-angle-left right"></i>
-							<span class="badge badge-info right">2</span>
-						</p>
-					</a>
-					<ul class="nav nav-treeview">
-						<li class="nav-item">
-							<a href="#" class="nav-link">
-								<i class="fa fa-file-invoice-dollar fa-xs nav-icon"></i>
-								<p>Laporan Penjualan</p>
-							</a>
-						</li>
-						<li class="nav-item">
-							<a href="pages/layout/top-nav-sidebar.html" class="nav-link">
-								<i class="fas fa-receipt nav-icon"></i>
-								<p>Laporan Penagihan</p>
-							</a>
-						</li>
-						<li class="nav-item">
-							<a href="pages/layout/top-nav-sidebar.html" class="nav-link">
-								<i class="fas fa-hand-holding-usd nav-icon"></i>
-								<p>Laporan Pendapatan</p>
-							</a>
-						</li>
-					</ul>
-				</li>
-				<li class="nav-header">Approval</li>
+				<?php }else{?>
 				<li class="nav-item">
 					<a href="<?=base_url()?>admin/penjualanapprove" class="nav-link">
 						<i class="nav-icon fa fa-check-double"></i>
@@ -137,7 +77,7 @@
 					</a>
 				</li>
 				<li class="nav-item">
-					<a href="pages/calendar.html" class="nav-link">
+					<a href="<?=base_url()?>admin/penagihanapprove" class="nav-link">
 						<i class="nav-icon fa fa-check-double"></i>
 						<p>
 							Approval Penagihan
@@ -145,8 +85,17 @@
 						</p>
 					</a>
 				</li>
-			</ul>
-		</nav>
+				<?php }}?>
+				<li class="nav-item">
+					<a href="<?=base_url()?>admin/logout" class="nav-link">
+						<i class="nav-icon fa fa-sign-out-alt"></i>
+						<p>
+							Logout
+						</p>
+					</a>
+				</li>
+        </ul>
+    </nav> 
 		<!-- /.sidebar-menu -->
 	</div>
 	<!-- /.sidebar -->

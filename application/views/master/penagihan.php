@@ -31,14 +31,13 @@
 
 	          <div id="toolbar" style="padding: 10px">
 	              <div class="row ml-1">
+				  	<?php if($this->session->posisi == 2 || $this->session->posisi == 1){ ?>
 	                  <div class="col-sm-6">
-	                  	<a href="javascript:void(0);" class="easyui-linkbutton" iconCls="icon-add" plain="false" onclick="newForm()">Add</a>
 	                  	<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="false" onclick="destroy()">Delete</a>
 	                  	<a href="javascript:void(0)" class="easyui-linkbutton" plain="false" onclick="edit()">Edit</a>
-	                  	<a href="javascript:void(0)" class="easyui-linkbutton" plain="false" onclick="detail()">Detail</a>
 	                  	<a href="javascript:void(0)" class="easyui-linkbutton" plain="false" onclick="catatan()">Tambah Catatan</a>
 	                  </div>
-	                  
+	                <?php }?>
 	                  <div class="col-sm-6 pull-right">
 	                      <input  id="search" placeholder="Please Enter Search a Goods" style="width:60%;" align="right">
 	                      <a href="javascript:void(0);"  id="btn_serach" class="easyui-linkbutton" iconCls="icon-search" plain="false" onclick="doSearch()">Search</a>
@@ -82,12 +81,6 @@ $(document).ready(function(){
         $('#btn_serach').click();
         }
     });
-	$('#kode').combobox({
-  	    url:'isKodePenjualan',
-  	    valueField:'no_faktur',
-  	    textField:'no_faktur',
-        setText:'no_faktur',
-	  });
 })
 function doSearch(){
 	$('#dgGrid').datagrid('load',{
@@ -120,11 +113,6 @@ function submitForm(){
 		}
 	});
 }
-function newForm(){
-	$('#dialog-form').dialog('open').dialog('setTitle','Add New Goods');
-	$('#ff').form('clear');
-	url = 'savePenagihan';
-}
 function editForm(){
 	var row = $('#dgGrid').datagrid('getSelected');
 		if (row){
@@ -132,12 +120,6 @@ function editForm(){
             $('#ff').form('load',row);
             $('#harga').textbox('setValue',row.harga_barang)
 			url = 'updatePenjualan?id='+row._id;
-		}
-}
-function detail(){
-	var row = $('#dgGrid').datagrid('getSelected');
-		if (row){
-			window.location.replace("getdetailpenjualan/"+row._id);
 		}
 }
 function destroy(){
@@ -188,7 +170,7 @@ function formatTerakhirBayar(i,r){
     return tanggal + " " + bulanIndo[Math.abs(bulan)] + " " + tahun;
 }
 function formatApprove(i,r){
-	if(r.status){
+	if(r.status == 0){
 		return 'Belum Approve'
 	}else{
 		return 'Sudah Approve'

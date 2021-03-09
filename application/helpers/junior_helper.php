@@ -61,3 +61,21 @@ function jam($tgl){
     $detik = substr($tgl,17,2);
     return $jam.':'.$menit.':'.$detik;       
 }
+function is_login()
+{
+    $ci = get_instance();
+    if (!$ci->session->userdata('_id')) {
+        return false;
+    } else {
+        return true;
+    }
+}
+function checked_akses($id_user_level,$id_menu){
+    $ci = get_instance();
+    $ci->db->where('id_posisi',$id_user_level);
+    $ci->db->where('id_menu',$id_menu);
+    $data = $ci->db->get('tbl_levels');
+    if($data->num_rows()>0){
+        return "checked='checked'";
+    }
+}

@@ -28,16 +28,18 @@
 
 					<div id="toolbar" style="padding: 10px">
 						<div class="row ml-1">
+							<?php if($this->session->posisi == 5 || $this->session->posisi == 2 || $this->session->posisi == 1){ ?>
 							<div class="col-sm-6">
 								<a href="javascript:void(0);" class="easyui-linkbutton" iconCls="icon-add" plain="false" onclick="newForm()">Add</a>
-								<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="false" onclick="destroy()">Delete</a>
-								<a href="javascript:void(0)" class="easyui-linkbutton" plain="false" onclick="edit()">Edit</a>
-								<a href="javascript:void(0)" class="easyui-linkbutton" plain="false" onclick="detail()">Detail</a>
 								<a href="javascript:void(0)" class="easyui-linkbutton" plain="false" onclick="catatan()">Tambah Catatan</a>
-								<a href="javascript:void(0)" class="easyui-linkbutton" plain="false" onclick="ganti()">Ganti Kolektor</a>
-								<a href="javascript:void(0)" class="easyui-linkbutton" plain="false" onclick="tagih()">Input Tagihan</a>
+								<?php if($this->session->posisi == 2 || $this->session->posisi == 1){ ?>
+									<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="false" onclick="destroy()">Delete</a>
+									<a href="javascript:void(0)" class="easyui-linkbutton" plain="false" onclick="editForm()">Edit</a>
+									<a href="javascript:void(0)" class="easyui-linkbutton" plain="false" onclick="detail()">Detail</a>
+									<a href="javascript:void(0)" class="easyui-linkbutton" plain="false" onclick="ganti()">Ganti Kolektor</a>
+								<?php }?>
 							</div>
-
+								<?php }?>
 							<div class="col-sm-6 pull-right">
 								<input id="search" placeholder="Please Enter Search a Goods" style="width:60%;" align="right">
 								<a href="javascript:void(0);" id="btn_serach" class="easyui-linkbutton" iconCls="icon-search" plain="false" onclick="doSearch()">Search</a>
@@ -54,16 +56,16 @@
 	      }" style="width:100%;max-width:500px;padding:30px 60px;">
 			<form id="ff" class="easyui-form" method="post" data-options="novalidate:false" enctype="multipart/form-data">
 				<div style="margin-bottom:20px">
-					<input class="easyui-textbox" name="kode_faktur" style="width:100%" data-options="label:'No Faktur:',required:true">
+					<input id="kode_faktur" class="easyui-textbox" name="kode_faktur" style="width:100%" data-options="label:'No Faktur:',required:true">
 				</div>
 				<div style="margin-bottom:20px">
 					<input class="easyui-textbox" name="nama_pembeli" style="width:100%" data-options="label:'Nama:',required:true">
 				</div>
 				<div style="margin-bottom:20px">
-					<textarea class="easyui-textbox" name="alamat_pembeli" style="width:100%" data-options="label:'Alamat :',required:true,multiline:true,height:100"></textarea>
+					<textarea id="alamat"class="easyui-textbox" name="alamat_pembeli" style="width:100%" data-options="label:'Alamat :',required:true,multiline:true,height:100"></textarea>
 				</div>
 				<div style="margin-bottom:20px">
-					<input type="number" class="easyui-textbox" name="no_tlfn" style="width:100%" data-options="label:'No Tlfn:',required:true">
+					<input id="notlfn" type="number" class="easyui-textbox" name="no_tlfn" style="width:100%" data-options="label:'No Tlfn:',required:true">
 				</div>
 				<div style="margin-bottom:20px">
 					<input id="barang" class="easyui-textbox" name="id_barang" style="width:100%" data-options="label:'Produk :',required:true">
@@ -75,7 +77,7 @@
 					<input id="tempo" type="number" value="0" class="easyui-textbox" name="tgl_tempo" style="width:100%" data-options="label:'Jatuh Tempo:',readonly:false, initValue:0, setText:'0'">
 				</div>
 				<div style="margin-bottom:20px">
-					<input type="date" class="easyui-textbox" name="tgl_jual" style="width:100%" data-options="label:'Tanggal Jual:', required: true">
+					<input id="tgljual" type="date" class="easyui-textbox" name="tgl_jual" style="width:100%" data-options="label:'Tanggal Jual:', required: true">
 				</div>
 			</form>
 			<div id="dialog-buttons">
@@ -111,22 +113,6 @@
 		</div>
 	</div>
 </div>
-<div id="tagih-form" class="easyui-window" title="Input Tagihan" data-options="modal:true,closed:true,iconCls:'icon-save',inline:false,onResize:function(){
-	          $(this).window('hcenter');
-	      }" style="width:100%;max-width:500px;padding:30px 60px;">
-	<form id="penagihan" class="easyui-form" method="post" data-options="novalidate:false" enctype="multipart/form-data">
-		<div style="margin-bottom:20px">
-			<input class="easyui-numberbox" name="total_bayar" style="width:100%" data-options="label:'Total Bayar:',required:true,groupSeparator:'.',prefix:'Rp '">
-		</div>
-		<div style="margin-bottom:20px">
-			<input type="date" class="easyui-textbox" name="tgl_bayar" style="width:100%" data-options="label:'Tanggal :',required:true,">
-		</div>
-	</form>
-	<div id="dialog-buttons">
-		<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="saveTagih()">Simpan</a>
-		<a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="javascript:jQuery('#tagih-form').dialog('close')">Batal</a>
-	</div>
-</div>
 </div>
 <script type="text/javascript">
 	$(document).ready(function() {
@@ -159,8 +145,8 @@
 					"value": 0
 				},
 				{
-					'metode': 'Kredit 7 Bulan',
-					"value": 7
+					'metode': 'Kredit 5 Bulan',
+					"value": 5
 				},
 				{
 					'metode': 'Kredit 10 Bulan',
@@ -278,47 +264,17 @@
 			}
 		});
 	}
-	function tagih() {
-		var row = $('#dgGrid').datagrid('getSelected');
-		if (row) {
-			$('#tagih-form').dialog('open').dialog('setTitle', 'Input Tagihan ' + row.no_faktur);
-			url = 'savepenagihan?kode=' + row.no_faktur;
-		}
-	}
-
-	function saveTagih() {
-		var string = $("#tagih").serialize();
-		$('#penagihan').form('submit', {
-			url: url,
-			onSubmit: function() {
-				return $(this).form('validate');
-			},
-			success: function(result) {
-				console.log('result', result)
-				var result = eval('(' + result + ')');
-				if (result.errorMsg) {
-					Toast.fire({
-						type: 'error',
-						title: '' + result.errorMsg + '.'
-					})
-				} else {
-					Toast.fire({
-						type: 'success',
-						title: '' + result.message + '.'
-					})
-					$('#tagih-form').dialog('close'); // close the dialog
-					$('#dgGrid').datagrid('reload'); // reload the user data
-				}
-			}
-		});
-	}
-
 	function editForm() {
 		var row = $('#dgGrid').datagrid('getSelected');
 		if (row) {
 			$('#dialog-form').dialog('open').dialog('setTitle', 'Edit Barang' + row.nama_barang);
 			$('#ff').form('load', row);
-			$('#harga').textbox('setValue', row.harga_barang)
+			$('#kode_faktur').textbox({value:row.no_faktur,disabled:true});
+			$('#barang').textbox({disabled:true});
+			$('#metode').textbox({disabled:true});
+			$('#alamat').textbox('setValue',row.alamat);
+			$('#notlfn').textbox('setValue',row.no_telp);
+			$('#tgljual').textbox('setValue',row.tgl_transaksi);
 			url = 'updatePenjualan?id=' + row._id;
 		}
 	}
@@ -378,6 +334,7 @@
 		}
 	}
 	function formatStatusTagih(i, r) {
+		console.log('r', r)
 		let tgl = new Date().getMonth();
 		let now = tgl+1;
 		if (r.bayar == now) {

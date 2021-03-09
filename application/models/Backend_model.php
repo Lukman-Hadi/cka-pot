@@ -11,6 +11,42 @@ class Backend_model extends CI_Model
         parent::__construct();
     }
 
+    function getIsMain(){
+        $this->db->where('is_aktif',1);
+        $query=$this->db->get('tbl_menus')->result();
+        return $query;
+    }
+    function getMenus()
+    {
+        $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
+        $rows = isset($_POST['rows']) ? intval($_POST['rows']) : 20;
+        $sort = isset($_POST['sort']) ? strval($_POST['sort']) : 'tbl_menus._id';
+        $order = isset($_POST['order']) ? strval($_POST['order']) : 'ASC';
+        $search = isset($_POST['search_data']) ? strval($_POST['search_data']) : '';
+        $offset = ($page-1)*$rows;
+        $result = array();
+
+        if(isset($_POST['search_data'])) {
+            $this->db->group_start();
+            $this->db->like('tbl_menus.title',$search,'both');
+            $this->db->group_end();
+        }
+        $result['total'] = $this->db->get('tbl_menus')->num_rows();
+
+        //
+         if(isset($_POST['search_data'])) {
+            $this->db->group_start();
+            $this->db->like('tbl_menus.title',$search,'both');
+            $this->db->group_end();
+        }
+        $this->db->order_by($sort,$order);
+        $this->db->limit($rows,$offset);
+        $query=$this->db->get('tbl_menus');    
+
+        $item = $query->result_array();    
+        $result = array_merge($result, ['rows' => $item]);
+        return $result;
+    }
 
     function getUsers()
     {
@@ -39,10 +75,6 @@ class Backend_model extends CI_Model
     function getIsLevel(){
         $query=$this->db->get('tbl_posisi')->result();
         return $query;
-    }
-
-    function getMenus(){
-
     }
 
     function getPosisi()
@@ -349,6 +381,49 @@ class Backend_model extends CI_Model
         $result = array_merge($result, ['rows' => $item]);
         return $result;
     }
+    function getApprovePenagihan(){
+        $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
+        $rows = isset($_POST['rows']) ? intval($_POST['rows']) : 20;
+        $sort = isset($_POST['sort']) ? strval($_POST['sort']) : 'p._id';
+        $order = isset($_POST['order']) ? strval($_POST['order']) : 'ASC';
+        $search = isset($_POST['search_data']) ? strval($_POST['search_data']) : '';
+        $offset = ($page-1)*$rows;
+        $result = array();
+
+        $this->db->select('p.*,u.nama, j.no_faktur, j.alamat, j.nama_pembeli, j.tgl_tempo');
+        $this->db->from('tbl_penagihan p');
+        $this->db->join('tbl_penjualan j','j.no_faktur = p.no_faktur');
+        $this->db->join('tbl_user u','u._id = p.id_user');
+        if(isset($_POST['search_data'])) {
+            $this->db->group_start();
+            $this->db->like('p.no_faktur',$search,'both');
+            $this->db->or_like('j.alamat',$search,'both');
+            $this->db->or_like('u.nama',$search,'both');
+            $this->db->or_like('j.nama_pembeli',$search,'both');
+            $this->db->group_end();
+        }
+        $this->db->where('status','0');
+        $result['total'] = $this->db->get('')->num_rows();
+        $this->db->select('p.*,u.nama, j.no_faktur, j.alamat, j.nama_pembeli, j.tgl_tempo');
+        $this->db->from('tbl_penagihan p');
+        $this->db->join('tbl_penjualan j','j.no_faktur = p.no_faktur');
+        $this->db->join('tbl_user u','u._id = p.id_user');
+        if(isset($_POST['search_data'])) {
+            $this->db->group_start();
+            $this->db->like('p.no_faktur',$search,'both');
+            $this->db->or_like('j.alamat',$search,'both');
+            $this->db->or_like('u.nama',$search,'both');
+            $this->db->or_like('j.nama_pembeli',$search,'both');
+            $this->db->group_end();
+        }
+        $this->db->where('status','0');
+        $this->db->order_by($sort,$order);
+        $this->db->limit($rows,$offset);
+        $query=$this->db->get();    
+        $item = $query->result_array();    
+        $result = array_merge($result, ['rows' => $item]);
+        return $result;
+    }
     function getTotalBayar($kode){
         $this->db->select('*');
         $this->db->from('tbl_penagihan');
@@ -364,5 +439,101 @@ class Backend_model extends CI_Model
         $this->db->where('posisi',6);
         $this->db->where('is_aktif',"1");
         return $this->db->get()->result();
+    }
+    function getFakturTagihan($month){
+        $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
+        $rows = isset($_POST['rows']) ? intval($_POST['rows']) : 20;
+        $sort = isset($_POST['sort']) ? strval($_POST['sort']) : 'p._id';
+        $order = isset($_POST['order']) ? strval($_POST['order']) : 'ASC';
+        $search = isset($_POST['search_data']) ? strval($_POST['search_data']) : '';
+        $offset = ($page-1)*$rows;
+        $result = array();
+
+        $this->db->select('p.*,u.nama, us.nama as penagih,(SELECT MONTH(created_at) from tbl_penagihan WHERE no_faktur = p.no_faktur ORDER BY _id DESC LIMIT 1) as bayar');
+        $this->db->from('tbl_penjualan p');
+        $this->db->join('tbl_user u','u._id = p.id_user');
+        $this->db->join('tbl_user us','us._id = p.id_penagih');
+        if(isset($_POST['search_data'])) {
+            $this->db->group_start();
+            $this->db->like('p.nama_pembeli',$search,'both');
+            $this->db->or_like('p.alamat',$search,'both');
+            $this->db->or_like('u.nama',$search,'both');
+            $this->db->or_like('p.tgl_tempo',$search,'both');
+            $this->db->or_like('p.no_faktur',$search,'both');
+            $this->db->group_end();
+        }
+        $this->db->where('p.status_bayar','1');
+        $result['total'] = $this->db->get('')->num_rows();
+        $this->db->select('p.*,u.nama, us.nama as penagih,(SELECT MONTH(created_at) from tbl_penagihan WHERE no_faktur = p.no_faktur ORDER BY _id DESC LIMIT 1) as bayar');
+        $this->db->from('tbl_penjualan p');
+        $this->db->join('tbl_user u','u._id = p.id_user');
+        $this->db->join('tbl_user us','us._id = p.id_penagih');
+        if(isset($_POST['search_data'])) {
+            $this->db->group_start();
+            $this->db->like('p.nama_pembeli',$search,'both');
+            $this->db->or_like('p.alamat',$search,'both');
+            $this->db->or_like('p.tgl_tempo',$search,'both');
+            $this->db->or_like('u.nama',$search,'both');
+            $this->db->or_like('p.no_faktur',$search,'both');
+            $this->db->group_end();
+        }
+        $this->db->where('p.status_bayar','1');
+        $this->db->order_by($sort,$order);
+        $this->db->limit($rows,$offset);
+        $query=$this->db->get();    
+
+        $item = $query->result_array();    
+        $result = array_merge($result, ['rows' => $item]);
+        return $result;
+
+    }
+    function getFakturTagihanById($month,$id){
+        $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
+        $rows = isset($_POST['rows']) ? intval($_POST['rows']) : 20;
+        $sort = isset($_POST['sort']) ? strval($_POST['sort']) : 'p._id';
+        $order = isset($_POST['order']) ? strval($_POST['order']) : 'ASC';
+        $search = isset($_POST['search_data']) ? strval($_POST['search_data']) : '';
+        $offset = ($page-1)*$rows;
+        $result = array();
+
+        $this->db->select('p.*,u.nama, us.nama as penagih,(SELECT MONTH(created_at) from tbl_penagihan WHERE no_faktur = p.no_faktur ORDER BY _id DESC LIMIT 1) as bayar');
+        $this->db->from('tbl_penjualan p');
+        $this->db->join('tbl_user u','u._id = p.id_user');
+        $this->db->join('tbl_user us','us._id = p.id_penagih');
+        if(isset($_POST['search_data'])) {
+            $this->db->group_start();
+            $this->db->like('p.nama_pembeli',$search,'both');
+            $this->db->or_like('p.alamat',$search,'both');
+            $this->db->or_like('u.nama',$search,'both');
+            $this->db->or_like('p.tgl_tempo',$search,'both');
+            $this->db->or_like('p.no_faktur',$search,'both');
+            $this->db->group_end();
+        }
+        $this->db->where('p.status_bayar','1');
+        $this->db->where('p.id_penagih',$id);
+        $result['total'] = $this->db->get('')->num_rows();
+        $this->db->select('p.*,u.nama, us.nama as penagih,(SELECT MONTH(created_at) from tbl_penagihan WHERE no_faktur = p.no_faktur ORDER BY _id DESC LIMIT 1) as bayar');
+        $this->db->from('tbl_penjualan p');
+        $this->db->join('tbl_user u','u._id = p.id_user');
+        $this->db->join('tbl_user us','us._id = p.id_penagih');
+        if(isset($_POST['search_data'])) {
+            $this->db->group_start();
+            $this->db->like('p.nama_pembeli',$search,'both');
+            $this->db->or_like('p.alamat',$search,'both');
+            $this->db->or_like('p.tgl_tempo',$search,'both');
+            $this->db->or_like('u.nama',$search,'both');
+            $this->db->or_like('p.no_faktur',$search,'both');
+            $this->db->group_end();
+        }
+        $this->db->where('p.status_bayar','1');
+        $this->db->where('p.id_penagih',$id);
+        $this->db->order_by($sort,$order);
+        $this->db->limit($rows,$offset);
+        $query=$this->db->get();    
+
+        $item = $query->result_array();    
+        $result = array_merge($result, ['rows' => $item]);
+        return $result;
+
     }
 }

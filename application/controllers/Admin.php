@@ -4,8 +4,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Admin extends CI_Controller {
     public function __construct() {
         parent::__construct();
+        if(!is_login())redirect(site_url('login'));
         $this->load->model('Login_model','login_model');
         $this->load->model('Backend_model','backend_model');
+        $this->load->model('Menu_model','menu_model');
         $this->load->model('Global_model','global_model');
     }
 
@@ -27,12 +29,128 @@ class Admin extends CI_Controller {
         $this->session->set_userdata($query);
         $this->load->view('auth/login');
     }
+    function logout(){
+        $this->session->sess_destroy();
+        $this->session->set_flashdata('status_login','Anda sudah berhasil keluar dari aplikasi');
+        $this->load->view('auth/login', 'refresh');
+    }
 
 	function isLevel(){
 		$this->output->set_content_type('application/json');
 		$level = $this->backend_model->getIsLevel();
 		echo json_encode($level);
 	}
+    function akses(){
+        $data['css_files'][] ='';
+        $data['js_files'][] ='';
+        $data['level'] = $this->db->get_where('tbl_levels',array('id_posisi'=>  $this->uri->segment(3)))->row_array();
+        $data['menu'] = $this->db->get_where('tbl_menus',array('is_main !='=> null))->result();
+        $this->template->load('template','master/akses',$data);
+    }
+
+    function kasi_akses_ajax(){
+        $id_menu        = $_GET['id_menu'];
+        $id_user_level  = $_GET['level'];
+        // chek data
+        $params = array('id_menu'=>$id_menu,'id_posisi'=>$id_user_level);
+        $akses = $this->db->get_where('tbl_levels',$params);
+        if($akses->num_rows()<1){
+            // insert data baru
+            $this->db->insert('tbl_levels',$params);
+        }else{
+            $this->db->where('id_menu',$id_menu);
+            $this->db->where('id_posisi',$id_user_level);
+            $this->db->delete('tbl_levels');
+        }
+    }
+    function menu(){
+        $data['title']  = 'Data Menu';
+        $data['collapsed'] = '';
+        $data['css_files'][] = base_url() . 'assets/admin/easyui/themes/material/easyui.css';
+        $data['css_files'][] = base_url() . 'assets/admin/easyui/themes/icon.css';
+        $data['js_files'][] = base_url() . 'assets/admin/easyui/jquery.easyui.min.js';
+        $data['js_files'][] = base_url() . 'assets/admin/easyui/datagrid-groupview.js';
+		$data['js_files'][] = base_url() . 'assets/admin/easyui/plugins/datagrid-scrollview.js';
+		$this->template->load('template','master/menu',$data);
+    }
+    function getMenus(){
+        $this->output->set_content_type('application/json');
+		$users = $this->backend_model->getMenus();
+		echo json_encode($users);
+    }
+    public function ismain()
+    {
+        $this->output->set_content_type('application/json');
+        $ismain = $this->backend_model->getIsMain();
+        echo json_encode($ismain);
+    }
+    function updateMenu(){
+        $title = $this->input->post('title', TRUE);
+        $uri = $this->input->post('uri', TRUE);
+        $icon = $this->input->post('icon', TRUE);
+        $is_main = $this->input->post('is_main', TRUE);
+        $order = $this->input->post('order', TRUE);
+        $data=array();
+        $data = array(
+                'title'         => $title,
+                'uri'           => $uri,
+                'icon'          => $icon,
+                'is_main'       => $is_main,
+                'ordinal'         => $order
+            );
+        $where = array('_id'=>$this->input->get('id'));
+        $result = $this->global_model->update('tbl_menus',$data, $where);
+        if ($result){
+            echo json_encode(array('message'=>'Update Success'));
+        } else {
+            echo json_encode(array('errorMsg'=>'Some errors occured.'));
+        }
+    }
+    function saveMenu(){
+        $title = $this->input->post('title', TRUE);
+        $uri = $this->input->post('uri', TRUE);
+        $icon = $this->input->post('icon', TRUE);
+        $is_main = $this->input->post('is_main', TRUE);
+        $order = $this->input->post('order', TRUE);
+        $data=array();
+        $data = array(
+                'title'         => $title,
+                'uri'           => $uri,
+                'icon'          => $icon,
+                'is_main'       => $is_main,
+                'ordinal'       => $order
+            );
+        $result = $this->global_model->insert('tbl_menus',$data);
+        if ($result){
+            echo json_encode(array('message'=>'Save Success'));
+        } else {
+            echo json_encode(array('errorMsg'=>'Some errors occured.'));
+        }
+    }
+    function aktifMenu(){
+        $id = $this->input->post('id');
+        $rows = $this->db->get_where('tbl_menus', array('_id'=>$id))->row_array();
+        if ($rows['is_aktif'] == 0){
+            $aktif = 1;
+        }else{
+            $aktif = 0;
+        }
+        $result = $this->global_model->update('tbl_menus',array('is_aktif'=>$aktif), array('_id'=>$id));
+        if ($result){
+            echo json_encode(array('message'=> 'Menu '.$rows['title'].' Aktif or Non Aktif Success'));
+        } else {
+            echo json_encode(array('errorMsg'=>'Some errors occured.'));
+        }
+    }
+    function destroyMenu(){
+        $id = $this->input->post('id');
+        $result = $this->global_model->delete('tbl_menus',array('_id'=>$id));
+        if ($result){
+            echo json_encode(array('message'=>'Deleted Success'));
+        } else {
+            echo json_encode(array('errorMsg'=>'Some errors occured.'));
+        }
+    }
 	//modul user
 	//list pegawai//
 	function users(){
@@ -393,42 +511,63 @@ class Admin extends CI_Controller {
         $data['detailtagih'] = $detailTagih->result();
         $this->template->load('template','master/detailpenjualan',$data);
     }
-    function updatePenjualan(){
-
+    function penjualanApprove(){
+        $data['title']  = 'Data Penjualan Cka';
+        $data['collapsed'] = '';
+        $data['css_files'][] = base_url() . 'assets/admin/easyui/themes/material/easyui.css';
+        $data['css_files'][] = base_url() . 'assets/admin/easyui/themes/icon.css';
+        $data['js_files'][] = base_url() . 'assets/admin/easyui/jquery.easyui.min.js';
+        $data['js_files'][] = base_url() . 'assets/admin/easyui/datagrid-groupview.js';
+        $data['js_files'][] = base_url() . 'assets/admin/easyui/plugins/datagrid-scrollview.js';
+        $data['js_files'][] = base_url() . 'assets/admin/easyui/plugins/datagrid-scrollview.js';
+        $data['js_files'][] = base_url() . 'assets/admin/plugins/accounting/accounting.min.js';
+        $this->template->load('template','master/penjualanapprove',$data);
     }
-    function editPenjualan(){
-
+    function getApprovePenjualan(){
+        $this->output->set_content_type('application/json');
+		$barang = $this->backend_model->getPenjualanApprove();
+		echo json_encode($barang);
     }
-    function savePenjualan(){
-        $kode = $this->input->post('kode_faktur', TRUE);
-		$nama = $this->input->post('nama_pembeli', TRUE);
-		$alamat = $this->input->post('alamat_pembeli', TRUE);
-		$tlfn = $this->input->post('no_tlfn', TRUE);
-        $id_barang = $this->input->post('id_barang', TRUE);
-        $status = $this->input->post('status_penjualan', TRUE);
-        // $idSales = 1; <-- harus ganti dengan session
-        $idSales = 1;
-        $tgl = $this->input->post('tgl_jual',TRUE);
-        $tempo = $this->input->post('tgl_tempo');
+    function approvePenjualan(){
+        $id         = $this->input->post('id');
+        $idPenagih  = $this->input->post('id_penagih');
+        $rows = $this->db->get_where('tbl_penjualan', array('_id'=>$id))->row();
+        $id_barang = $rows->id_barang;
+        $status = $rows->status_penjualan;
+        $tgl = $rows->tgl_transaksi;
+        //
         $barang = $this->backend_model->getBarangById($id_barang)->row();
         $bayar = "0";
         $total = $barang->harga_barang;
         if($status == 0){
             $tempo = 0;
-        }else{
-            $totalTagih = $total/$status;
             $dataPenagihan = array(
-                'kode_bayar'        => $kode . '-1',
-                'no_faktur'       => $kode,
-                'total_bayar'       => $totalTagih,
+                'kode_bayar'        => $rows->no_faktur . '-1',
+                'no_faktur'         => $rows->no_faktur,
+                'total_bayar'       => $total,
                 'tgl_bayar'         => $tgl,
-                'id_user'        => $idSales,
+                'id_user'           => $rows->id_user,
+                'status'            => '1',
             );
             $isTagih = $this->global_model->insert('tbl_penagihan',$dataPenagihan);
             if(!$isTagih){
                 echo json_encode(array('errorMsg'=>'Error Penagihan.'));
             }
-            $tempo = $this->input->post('tgl_tempo');
+        }else{
+            $totalTagih = $total/$status;
+            $dataPenagihan = array(
+                'kode_bayar'        => $rows->no_faktur . '-1',
+                'no_faktur'       => $rows->no_faktur,
+                'total_bayar'       => $totalTagih,
+                'tgl_bayar'         => $tgl,
+                'id_user'        => $rows->id_user,
+                'status'            => '1',
+            );
+            $isTagih = $this->global_model->insert('tbl_penagihan',$dataPenagihan);
+            if(!$isTagih){
+                echo json_encode(array('errorMsg'=>'Error Penagihan.'));
+            }
+            $tempo = $rows->tgl_tempo;
             $bayar = "1";
         }
         $stokLama = $barang->stok;
@@ -442,6 +581,99 @@ class Admin extends CI_Controller {
         if(!$update){
             echo json_encode(array('errorMsg'=>'Error Update Stok.'));
         }
+        //
+        if ($rows->status_approve == '0'){
+            $approve = '1';
+        }else{
+            $approve = '0';
+        }
+        $data=array();
+        $data = array(
+            'status_penjualan'  => $status,
+            'status_bayar'      => $bayar,
+            'tgl_tempo'         => $tempo,
+            'status_approve'    => $approve,
+            'id_penagih'        => $idPenagih
+        );
+        $result = $this->global_model->update('tbl_penjualan',$data, array('_id'=>$id));
+        if ($result){
+            echo json_encode(array('message'=> 'Faktur '.$rows->no_faktur.' Approve Success'));
+        } else {
+            echo json_encode(array('errorMsg'=>'Some errors occured.'));
+        }
+    }
+    function updatePenjualan(){
+        $id = $this->input->get('id');
+        $data = array();
+        $data = array(
+            'nama_pembeli'      => $this->input->post('nama_pembeli'),
+            'alamat'            => $this->input->post('alamat_pembeli'),
+            'no_telp'           => $this->input->post('no_tlfn'),
+            'tgl_transaksi'     => $this->input->post('tgl_jual'),
+            'tgl_tempo'         => $this->input->post('tgl_tempo'),
+        );
+        $result = $this->global_model->update('tbl_penjualan',$data,array('_id'=>$id));
+        if($result){
+            echo json_encode(array('message'=> 'Update Success'));
+        }else{
+            echo json_encode(array('errorMsg'=>'Some errors occured.'));
+        }
+    }
+    function savePenjualan(){
+        $kode = $this->input->post('kode_faktur', TRUE);
+		$nama = $this->input->post('nama_pembeli', TRUE);
+		$alamat = $this->input->post('alamat_pembeli', TRUE);
+		$tlfn = $this->input->post('no_tlfn', TRUE);
+        $id_barang = $this->input->post('id_barang', TRUE);
+        $status = $this->input->post('status_penjualan', TRUE);
+        $idSales = $this->session->_id;
+        $tgl = $this->input->post('tgl_jual',TRUE);
+        $tempo = $this->input->post('tgl_tempo');
+        $barang = $this->backend_model->getBarangById($id_barang)->row();
+        $bayar = "0";
+        $total = $barang->harga_barang;
+        //dont touch
+        // if($status == 0){
+        //     $tempo = 0;
+        //     $dataPenagihan = array(
+        //         'kode_bayar'        => $kode . '-1',
+        //         'no_faktur'       => $kode,
+        //         'total_bayar'       => $total,
+        //         'tgl_bayar'         => $tgl,
+        //         'id_user'        => $idSales,
+        //     );
+        //     $isTagih = $this->global_model->insert('tbl_penagihan',$dataPenagihan);
+        //     if(!$isTagih){
+        //         echo json_encode(array('errorMsg'=>'Error Penagihan.'));
+        //     }
+        // }else{
+        //     $totalTagih = $total/$status;
+        //     $dataPenagihan = array(
+        //         'kode_bayar'        => $kode . '-1',
+        //         'no_faktur'       => $kode,
+        //         'total_bayar'       => $totalTagih,
+        //         'tgl_bayar'         => $tgl,
+        //         'id_user'        => $idSales,
+        //     );
+        //     $isTagih = $this->global_model->insert('tbl_penagihan',$dataPenagihan);
+        //     if(!$isTagih){
+        //         echo json_encode(array('errorMsg'=>'Error Penagihan.'));
+        //     }
+        //     $tempo = $this->input->post('tgl_tempo');
+        //     $bayar = "1";
+        // }
+        // $stokLama = $barang->stok;
+        // $dataStok = array();
+        // $stokBaru = $stokLama-1;
+        // $dataStok = array(
+        //     'stok' => $stokBaru,
+        // );
+        // $where = array('_id'=>$id_barang);
+        // $update = $this->global_model->update('tbl_barang',$dataStok, $where);
+        // if(!$update){
+        //     echo json_encode(array('errorMsg'=>'Error Update Stok.'));
+        // }
+        //-----///
         $data=array();
         $data = array(
             'no_faktur'         => $kode,
@@ -501,16 +733,16 @@ class Admin extends CI_Controller {
 		$barang = $this->backend_model->getPenagihan();
 		echo json_encode($barang);
     }
-    function getPenagihanById(){
-
-    }
     function destroyPenagihan(){
-
+        $id = $this->input->post('id');
+        $result = $this->global_model->delete('tbl_penagihan',array('_id'=>$id));
+        if ($result){
+            echo json_encode(array('message'=>'Deleted Success'));
+        } else {
+            echo json_encode(array('errorMsg'=>'Some errors occured.'));
+        }
     }
     function editPenagihan(){
-
-    }
-    function approvePenagihan(){
 
     }
     function savePenagihan(){
@@ -542,39 +774,7 @@ class Admin extends CI_Controller {
 
     //modul approval//
     //approve penjualan//
-    function penjualanApprove(){
-        $data['title']  = 'Data Penjualan Cka';
-        $data['collapsed'] = '';
-        $data['css_files'][] = base_url() . 'assets/admin/easyui/themes/material/easyui.css';
-        $data['css_files'][] = base_url() . 'assets/admin/easyui/themes/icon.css';
-        $data['js_files'][] = base_url() . 'assets/admin/easyui/jquery.easyui.min.js';
-        $data['js_files'][] = base_url() . 'assets/admin/easyui/datagrid-groupview.js';
-        $data['js_files'][] = base_url() . 'assets/admin/easyui/plugins/datagrid-scrollview.js';
-        $data['js_files'][] = base_url() . 'assets/admin/easyui/plugins/datagrid-scrollview.js';
-        $data['js_files'][] = base_url() . 'assets/admin/plugins/accounting/accounting.min.js';
-        $this->template->load('template','master/penjualanapprove',$data);
-    }
-    function getApprovePenjualan(){
-        $this->output->set_content_type('application/json');
-		$barang = $this->backend_model->getPenjualanApprove();
-		echo json_encode($barang);
-    }
-    function approvePenjualan(){
-        $id         = $this->input->post('id');
-        $idPenagih  = $this->input->post('id_penagih');
-        $rows = $this->db->get_where('tbl_penjualan', array('_id'=>$id))->row_array();
-        if ($rows['status_approve'] == '0'){
-            $approve = '1';
-        }else{
-            $approve = '0';
-        }
-        $result = $this->global_model->update('tbl_penjualan',array('status_approve'=>$approve,'id_penagih'=>$idPenagih), array('_id'=>$id));
-        if ($result){
-            echo json_encode(array('message'=> 'Faktur '.$rows['no_faktur'].' Approve Success'));
-        } else {
-            echo json_encode(array('errorMsg'=>'Some errors occured.'));
-        }
-    }
+   
     function isPenagih(){
         $this->output->set_content_type('application/json');
         $data = $this->backend_model->getIsPenagih();
@@ -589,5 +789,61 @@ class Admin extends CI_Controller {
         } else {
             echo json_encode(array('errorMsg'=>'Some errors occured.'));
         }
+    }
+    function inputTagihan(){
+        $data['title']  = 'Data Penjualan Cka';
+        $data['collapsed'] = '';
+        $data['css_files'][] = base_url() . 'assets/admin/easyui/themes/material/easyui.css';
+        $data['css_files'][] = base_url() . 'assets/admin/easyui/themes/icon.css';
+        $data['js_files'][] = base_url() . 'assets/admin/easyui/jquery.easyui.min.js';
+        $data['js_files'][] = base_url() . 'assets/admin/easyui/datagrid-groupview.js';
+        $data['js_files'][] = base_url() . 'assets/admin/easyui/plugins/datagrid-scrollview.js';
+        $data['js_files'][] = base_url() . 'assets/admin/easyui/plugins/datagrid-scrollview.js';
+        $data['js_files'][] = base_url() . 'assets/admin/plugins/accounting/accounting.min.js';
+        $this->template->load('template','master/inputtagihan',$data);
+    }
+    function penagihanApprove(){
+        $data['title']  = 'Data Penjualan Cka';
+        $data['collapsed'] = '';
+        $data['css_files'][] = base_url() . 'assets/admin/easyui/themes/material/easyui.css';
+        $data['css_files'][] = base_url() . 'assets/admin/easyui/themes/icon.css';
+        $data['js_files'][] = base_url() . 'assets/admin/easyui/jquery.easyui.min.js';
+        $data['js_files'][] = base_url() . 'assets/admin/easyui/datagrid-groupview.js';
+        $data['js_files'][] = base_url() . 'assets/admin/easyui/plugins/datagrid-scrollview.js';
+        $data['js_files'][] = base_url() . 'assets/admin/easyui/plugins/datagrid-scrollview.js';
+        $data['js_files'][] = base_url() . 'assets/admin/plugins/accounting/accounting.min.js';
+        $this->template->load('template','master/penagihanapprove',$data);
+    }
+    function getApprovePenagihan(){
+        $this->output->set_content_type('application/json');
+		$data = $this->backend_model->getApprovePenagihan();
+		echo json_encode($data);
+    }
+    function approvePenagihan(){
+        $id         = $this->input->post('id');
+        $rows       = $this->db->get_where('tbl_penagihan', array('_id'=>$id))->row_array();
+        if ($rows['status'] == '0'){
+            $approve = '1';
+        }else{
+            $approve = '0';
+        }
+        $result = $this->global_model->update('tbl_penagihan',array('status'=>$approve,), array('_id'=>$id));
+        if ($result){
+            echo json_encode(array('message'=> 'Faktur '.$rows['no_faktur'].' Approve Success'));
+        } else {
+            echo json_encode(array('errorMsg'=>'Some errors occured.'));
+        }
+    }
+    function getFakturTagihan(){
+        $month = date('m');
+        $id = $this->session->_id;
+        $posisi = $this->session->posisi;
+        if($posisi == 6){
+    		$data = $this->backend_model->getFakturTagihanById($month,$id);
+        }else{
+    		$data = $this->backend_model->getFakturTagihan($month);
+        }
+        $this->output->set_content_type('application/json');
+		echo json_encode($data);
     }
 }

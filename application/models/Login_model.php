@@ -11,8 +11,9 @@ class Login_model extends CI_Model
         parent::__construct();
     }
 
-    function getLogin()
+    function getLogin($username)
     {
+    	$this->db->where('nik',$username);
     	return $this->db->get('tbl_user');
     }
 
